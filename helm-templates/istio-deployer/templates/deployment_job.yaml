@@ -1,0 +1,21 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: '{{ .Values.SERVICE_NAME }}'
+spec:
+  template:
+    metadata:
+      labels:
+        app: '{{ .Values.SERVICE_NAME }}'
+    spec:
+      containers:
+      - name: '{{ .Values.SERVICE_NAME }}'
+        image: '{{ .Values.IMAGE_REPOSITORY }}:{{ .Values.TAG }}'
+        imagePullPolicy: Always
+        args:
+        - entrypoint.sh
+        env:
+        - name: DEPLOYMENT_SESSION_ID
+          value: '{{ .Values.DEPLOYMENT_SESSION_ID }}'
+      restartPolicy: OnFailure
+  backoffLimit: 4

@@ -1,0 +1,53 @@
+SERVICE_NAME: istio-deployer
+NAMESPACE: istio-system
+PAAS_PLATFORM: KUBERNETES
+IMAGE_REPOSITORY: ghcr.io/netcracker/istio-deployer
+TAG: latest
+LOG_LEVEL: info
+CPU_REQUEST: 100m
+CPU_LIMIT: 100m
+MEMORY_LIMIT: 125Mi
+READONLY_CONTAINER_FILE_SYSTEM_ENABLED: false
+
+meshConfig:
+  defaultConfig:
+    proxyMetadata:
+      ISTIO_META_DNS_CAPTURE: "true"
+      ISTIO_META_DNS_AUTO_ALLOCATE: "true"
+      ISTIO_META_ROUTER_MODE: "sni-dnat"
+trafficManagement:
+  enabled: true
+pilot:
+  traceSampling: 100.0
+  configValidation: true
+  CPU_REQUEST: 100m
+  CPU_LIMIT: 100m
+  MEMORY_REQUEST: "128Mi"
+  MEMORY_LIMIT: "512Mi"
+
+ztunnel:
+  CPU_REQUEST: "50m"
+  CPU_LIMIT: "200m"
+  MEMORY_REQUEST: "64Mi"
+  MEMORY_LIMIT: "256Mi"
+
+cni:
+  CPU_REQUEST: "50m"
+  CPU_LIMIT: "200m"
+  MEMORY_REQUEST: "64Mi"
+  MEMORY_LIMIT: "256Mi"
+
+ingressGateway:
+  ENABLED: false
+  CPU_REQUEST: "50m"
+  CPU_LIMIT: "200m"
+  MEMORY_REQUEST: "64Mi"
+  MEMORY_LIMIT: "256Mi"
+
+egressGateway:
+  ENABLED: false
+  CPU_REQUEST: "50m"
+  CPU_LIMIT: "200m"
+  MEMORY_REQUEST: "64Mi"
+  MEMORY_LIMIT: "256Mi"
+
