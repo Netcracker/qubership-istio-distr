@@ -8,6 +8,7 @@ CPU_REQUEST: 100m
 CPU_LIMIT: 100m
 MEMORY_LIMIT: 125Mi
 READONLY_CONTAINER_FILE_SYSTEM_ENABLED: false
+SA_NAME: admin-sa
 
 meshConfig:
   defaultConfig:

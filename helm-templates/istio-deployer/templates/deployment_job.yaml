@@ -8,6 +8,7 @@ spec:
       labels:
         app: '{{ .Values.SERVICE_NAME }}'
     spec:
+      serviceAccountName: '{{ .Values.SA_NAME }}'
       containers:
       - name: '{{ .Values.SERVICE_NAME }}'
         image: '{{ .Values.IMAGE_REPOSITORY }}:{{ .Values.TAG }}'
