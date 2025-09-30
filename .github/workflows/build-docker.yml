@@ -16,7 +16,7 @@ jobs:
 
       - name: Load configuration
         run: | 
-          istio-version=$(grep "ISTIO_VERSION" $GITHUB_WORKSPACE/.github/c | awk -F':' '{print $2}')
+          istio-version=$(grep "ISTIO_VERSION" $GITHUB_WORKSPACE/.github/configuration.yml | awk -F':' '{print $2}')
           echo "istio-version=${istio-version}" >> "$GITHUB_OUTPUT"     
 
   build-and-upload:
