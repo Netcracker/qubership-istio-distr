@@ -18,5 +18,12 @@ spec:
         env:
         - name: DEPLOYMENT_SESSION_ID
           value: '{{ .Values.DEPLOYMENT_SESSION_ID }}'
+        volumeMounts:
+        - name: istio-config
+          mountPath: /config
       restartPolicy: OnFailure
+      volumes:
+      - name: istio-config
+        configMap:
+          name: istio-operator-config
   backoffLimit: 4

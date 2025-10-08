@@ -1,0 +1,70 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: istio-operator-config
+  namespace: {{ .Values.NAMESPACE }}
+data:
+  istio-operator.yaml: |
+    apiVersion: install.istio.io/v1alpha1
+    kind: IstioOperator
+    metadata:
+      name: istio-ambient-install
+      namespace: {{ .Values.NAMESPACE }}
+    spec:
+      profile: ambient
+      meshConfig: {{ .Values.meshConfig }}
+      components:
+        pilot:
+          enabled: true
+          k8s:
+            resources:
+              requests:
+                cpu: {{ .Values.pilot.CPU_REQUEST }}
+                memory: {{ .Values.pilot.MEMORY_REQUEST }}
+              limits:
+                cpu: {{ .Values.pilot.CPU_LIMIT }}
+                memory: {{ .Values.pilot.MEMORY_LIMIT }}
+
+        ztunnel:
+          enabled: true
+          k8s:
+            resources:
+              requests:
+                cpu: {{ .Values.ztunnel.CPU_REQUEST }}
+                memory: {{ .Values.ztunnel.MEMORY_REQUEST }}
+              limits:
+                cpu: {{ .Values.ztunnel.CPU_LIMIT }}
+                memory: {{ .Values.ztunnel.MEMORY_LIMIT }}
+        cni:
+          enabled: true
+          k8s:
+            resources:
+              requests:
+                cpu: {{ .Values.cni.CPU_REQUEST }}
+                memory: {{ .Values.cni.MEMORY_REQUEST }}
+              limits:
+                cpu: {{ .Values.cni.CPU_LIMIT }}
+                memory: {{ .Values.cni.MEMORY_LIMIT }}
+
+        ingressGateways:
+          - name: istio-ingressgateway
+            enabled: {{ .Values.ingressGateway.ENABLED }}
+            k8s:
+              resources:
+                requests:
+                  cpu: {{ .Values.ingressGateway.CPU_REQUEST }}
+                  memory: {{ .Values.ingressGateway.MEMORY_REQUEST }}
+                limits:
+                  cpu: {{ .Values.ingressGateway.CPU_LIMIT }}
+                  memory: {{ .Values.ingressGateway.MEMORY_LIMIT }}
+        egressGateways:
+          - name: istio-egressgateway
+            enabled: {{ .Values.egressGateway.ENABLED }}
+            k8s:
+              resources:
+                requests:
+                  cpu: {{ .Values.egressGateway.CPU_REQUEST }}
+                  memory: {{ .Values.egressGateway.MEMORY_REQUEST }}
+                limits:
+                  cpu: {{ .Values.egressGateway.CPU_LIMIT }}
+                  memory: {{ .Values.egressGateway.MEMORY_LIMIT }}
