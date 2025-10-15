@@ -64,3 +64,67 @@ helm template render .\helm-templates\istio-deployer\ --values .\helm-templates\
 And apply processed file (install.yml) instead of helm install usage
 
 The kubernetes job will run istio deployment in case of valid profile used 
+
+### Prerequisites
+For deploying Istio Ambient Mode, the service account requires specific permissions to operate correctly, especially because Ambient Mode runs as a sidecar-less, data-plane-only mode that relies on a control plane component to handle proxy injection and configuration.
+
+Permissions for Istio Ambient Mode
+In general, the service account used by Istio Ambient Mode needs permissions to:
+ - Manage and watch resources like Pods, Namespaces, ServiceAccounts, and ConfigMaps.
+ - Access custom resources related to Istio, such as WorkloadEntry, WorkloadGroup, ProxyConfig, etc.
+ - Create, update, delete, and list resources required for configuration and operation.
+
+
+Here's an example of a ClusterRole with the necessary permissions for Ambient Mode, extend it if your custom profile requires more rights:
+
+```
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: istio-ambient
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+      - namespaces
+      - serviceaccounts
+      - configmaps
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - networking.istio.io
+    resources:
+      - workloadentries
+      - workloadgroups
+      - proxyconfigs
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - discovery.k8s.io
+    resources:
+      - endpointslices
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - security.istio.io
+    resources:
+      - authorizationpolicies
+      - peerauthentications
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - config.istio.io
+    resources:
+      - meshconfig
+    verbs:
+      - get
+```

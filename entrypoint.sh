@@ -10,7 +10,7 @@ if [ -f "${CONFIG_FILE}" ]; then
         echo "Ambient profile extention found, proceed with an installation"
         istioctl install -y -f ${CONFIG_FILE}
     else
-        echo "File content is invalid. There was no correct profile found for deployment"
+        echo "File content is invalid. There was no correct profile found for deployment - ambient mode is required"
         exit 1 
     fi
 else
