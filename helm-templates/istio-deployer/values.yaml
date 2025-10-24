@@ -19,7 +19,6 @@ meshConfig:
 trafficManagement:
   enabled: true
 pilot:
-  traceSampling: 100.0
   configValidation: true
   CPU_REQUEST: 100m
   CPU_LIMIT: 100m
@@ -39,13 +38,6 @@ cni:
   MEMORY_LIMIT: "256Mi"
 
 ingressGateway:
-  ENABLED: false
-  CPU_REQUEST: "50m"
-  CPU_LIMIT: "200m"
-  MEMORY_REQUEST: "64Mi"
-  MEMORY_LIMIT: "256Mi"
-
-egressGateway:
   ENABLED: false
   CPU_REQUEST: "50m"
   CPU_LIMIT: "200m"

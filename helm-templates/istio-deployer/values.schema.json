@@ -1,0 +1,200 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "type": "object",
+  "title": "The isio configuration configMap schema",
+  "description": "The JSON schema for istio deployer values file.",
+  "default": { },
+  "properties": {
+    "SERVICE_NAME": {
+      "type": "string"
+    },
+    "NAMESPACE": {
+      "type": "string"
+    },
+    "PAAS_PLATFORM": {
+      "type": "string"
+    },
+    "IMAGE_REPOSITORY": {
+      "type": "string"
+    },
+    "TAG": {
+      "type": "string"
+    },
+    "LOG_LEVEL": {
+      "type": "string"
+    },
+    "CPU_REQUEST": {
+      "type": "string"
+    },
+    "CPU_LIMIT": {
+      "type": "string"
+    },
+    "MEMORY_LIMIT": {
+      "type": "string"
+    },
+    "READONLY_CONTAINER_FILE_SYSTEM_ENABLED": {
+      "type": "boolean"
+    },
+    "SA_NAME": {
+      "type": "string"
+    },
+    "meshConfig": {
+      "type": "object",
+      "properties": {
+        "defaultConfig": {
+          "type": "object",
+          "properties": {
+            "proxyMetadata": {
+              "type": "object",
+              "properties": {
+                "ISTIO_META_DNS_CAPTURE": {
+                  "type": "string"
+                },
+                "ISTIO_META_DNS_AUTO_ALLOCATE": {
+                  "type": "string"
+                },
+                "ISTIO_META_ROUTER_MODE": {
+                  "type": "string"
+                }
+              },
+              "required": [
+
+              ]
+            }
+          },
+          "required": [
+          ]
+        }
+      },
+      "required": [
+      ]
+    },
+    "trafficManagement": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        }
+      },
+      "required": ["enabled"]
+    },
+    "pilot": {
+      "type": "object",
+      "properties": {
+        "configValidation": {
+          "type": "boolean"
+        },
+        "CPU_REQUEST": {
+          "type": "string"
+        },
+        "CPU_LIMIT": {
+          "type": "string"
+        },
+        "MEMORY_REQUEST": {
+          "type": "string"
+        },
+        "MEMORY_LIMIT": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "CPU_REQUEST",
+        "CPU_LIMIT",
+        "MEMORY_REQUEST",
+        "MEMORY_LIMIT"
+      ]
+    },
+    "ztunnel": {
+      "type": "object",
+      "properties": {
+        "CPU_REQUEST": {
+          "type": "string"
+        },
+        "CPU_LIMIT": {
+          "type": "string"
+        },
+        "MEMORY_REQUEST": {
+          "type": "string"
+        },
+        "MEMORY_LIMIT": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "CPU_REQUEST",
+        "CPU_LIMIT",
+        "MEMORY_REQUEST",
+        "MEMORY_LIMIT"
+      ]
+    },
+    "cni": {
+      "type": "object",
+      "properties": {
+        "CPU_REQUEST": {
+          "type": "string"
+        },
+        "CPU_LIMIT": {
+          "type": "string"
+        },
+        "MEMORY_REQUEST": {
+          "type": "string"
+        },
+        "MEMORY_LIMIT": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "CPU_REQUEST",
+        "CPU_LIMIT",
+        "MEMORY_REQUEST",
+        "MEMORY_LIMIT"
+      ]
+    },
+    "ingressGateway": {
+      "type": "object",
+      "properties": {
+        "ENABLED": {
+          "type": "boolean"
+        },
+        "CPU_REQUEST": {
+          "type": "string"
+        },
+        "CPU_LIMIT": {
+          "type": "string"
+        },
+        "MEMORY_REQUEST": {
+          "type": "string"
+        },
+        "MEMORY_LIMIT": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "ENABLED",
+        "CPU_REQUEST",
+        "CPU_LIMIT",
+        "MEMORY_REQUEST",
+        "MEMORY_LIMIT"
+      ]
+    }
+  },
+  "required": [
+    "SERVICE_NAME",
+    "NAMESPACE",
+    "PAAS_PLATFORM",
+    "IMAGE_REPOSITORY",
+    "TAG",
+    "LOG_LEVEL",
+    "CPU_REQUEST",
+    "CPU_LIMIT",
+    "MEMORY_LIMIT",
+    "READONLY_CONTAINER_FILE_SYSTEM_ENABLED",
+    "SA_NAME",
+    "meshConfig",
+    "trafficManagement",
+    "pilot",
+    "ztunnel",
+    "cni",
+    "ingressGateway"
+  ]
+}

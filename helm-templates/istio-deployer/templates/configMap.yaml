@@ -49,6 +49,8 @@ data:
         ingressGateways:
           - name: istio-ingressgateway
             enabled: {{ .Values.ingressGateway.ENABLED }}
+            label:
+              istio: ingressgateway
             k8s:
               resources:
                 requests:
@@ -57,14 +59,5 @@ data:
                 limits:
                   cpu: {{ .Values.ingressGateway.CPU_LIMIT }}
                   memory: {{ .Values.ingressGateway.MEMORY_LIMIT }}
-        egressGateways:
-          - name: istio-egressgateway
-            enabled: {{ .Values.egressGateway.ENABLED }}
-            k8s:
-              resources:
-                requests:
-                  cpu: {{ .Values.egressGateway.CPU_REQUEST }}
-                  memory: {{ .Values.egressGateway.MEMORY_REQUEST }}
-                limits:
-                  cpu: {{ .Values.egressGateway.CPU_LIMIT }}
-                  memory: {{ .Values.egressGateway.MEMORY_LIMIT }}
+              service:
+                type: LoadBalancer

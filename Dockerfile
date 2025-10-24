@@ -1,10 +1,10 @@
-FROM ubuntu:20.04
+FROM alpine:3.22.2
 
 WORKDIR /workspace
 
-RUN apt-get update && \
-    apt-get install -y curl unzip git -q && \
-    apt-get clean
+RUN apk update --no-cache
+RUN apk add --no-cache ca-certificates curl bash
+RUN apk add --no-cache --upgrade libcrypto3 libssl3
 
 ARG ISTIO_VERSION=1.27.1
 
