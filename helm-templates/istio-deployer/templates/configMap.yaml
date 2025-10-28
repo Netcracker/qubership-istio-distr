@@ -45,19 +45,3 @@ data:
               limits:
                 cpu: {{ .Values.cni.CPU_LIMIT }}
                 memory: {{ .Values.cni.MEMORY_LIMIT }}
-
-        ingressGateways:
-          - name: istio-ingressgateway
-            enabled: {{ .Values.ingressGateway.ENABLED }}
-            label:
-              istio: ingressgateway
-            k8s:
-              resources:
-                requests:
-                  cpu: {{ .Values.ingressGateway.CPU_REQUEST }}
-                  memory: {{ .Values.ingressGateway.MEMORY_REQUEST }}
-                limits:
-                  cpu: {{ .Values.ingressGateway.CPU_LIMIT }}
-                  memory: {{ .Values.ingressGateway.MEMORY_LIMIT }}
-              service:
-                type: LoadBalancer

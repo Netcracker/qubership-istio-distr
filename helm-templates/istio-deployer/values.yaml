@@ -1,14 +1,8 @@
 SERVICE_NAME: istio-deployer
 NAMESPACE: istio-system
-PAAS_PLATFORM: KUBERNETES
 IMAGE_REPOSITORY: ghcr.io/netcracker/istio-deployer
 TAG: latest
-LOG_LEVEL: info
-CPU_REQUEST: 100m
-CPU_LIMIT: 100m
-MEMORY_LIMIT: 125Mi
-READONLY_CONTAINER_FILE_SYSTEM_ENABLED: false
-SA_NAME: admin-sa
+SA_NAME: default
 
 meshConfig:
   defaultConfig:
@@ -19,28 +13,21 @@ meshConfig:
 trafficManagement:
   enabled: true
 pilot:
-  configValidation: true
-  CPU_REQUEST: 100m
-  CPU_LIMIT: 100m
+  CPU_REQUEST: 200m
+  CPU_LIMIT: 400m
+  MEMORY_REQUEST: "256Mi"
+  MEMORY_LIMIT: "1Gi"
+
+ztunnel:
+  CPU_REQUEST: "100m"
+  CPU_LIMIT: "400m"
   MEMORY_REQUEST: "128Mi"
   MEMORY_LIMIT: "512Mi"
 
-ztunnel:
-  CPU_REQUEST: "50m"
-  CPU_LIMIT: "200m"
-  MEMORY_REQUEST: "64Mi"
-  MEMORY_LIMIT: "256Mi"
-
 cni:
-  CPU_REQUEST: "50m"
-  CPU_LIMIT: "200m"
-  MEMORY_REQUEST: "64Mi"
-  MEMORY_LIMIT: "256Mi"
+  CPU_REQUEST: "100m"
+  CPU_LIMIT: "400m"
+  MEMORY_REQUEST: "128Mi"
+  MEMORY_LIMIT: "512Mi"
 
-ingressGateway:
-  ENABLED: false
-  CPU_REQUEST: "50m"
-  CPU_LIMIT: "200m"
-  MEMORY_REQUEST: "64Mi"
-  MEMORY_LIMIT: "256Mi"
 
