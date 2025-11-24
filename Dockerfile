@@ -1,12 +1,10 @@
-FROM alpine:3.22.2
+FROM ghcr.io/netcracker/qubership/core-base:2.0.0
 
 WORKDIR /workspace
 
 RUN apk update --no-cache
-RUN apk add --no-cache ca-certificates curl bash
-RUN apk add --no-cache --upgrade libcrypto3 libssl3
 
-ARG ISTIO_VERSION=1.27.1
+ARG ISTIO_VERSION=1.28.0
 
 # Install istioctl
 RUN curl -L https://istio.io/downloadIstio | ISTIO_VERSION=${ISTIO_VERSION} TARGET_ARCH=amd64  sh - && \

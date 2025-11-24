@@ -41,9 +41,6 @@
                 "ISTIO_META_DNS_CAPTURE": {
                   "type": "string"
                 },
-                "ISTIO_META_DNS_AUTO_ALLOCATE": {
-                  "type": "string"
-                },
                 "ISTIO_META_ROUTER_MODE": {
                   "type": "string"
                 }

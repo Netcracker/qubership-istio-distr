@@ -8,7 +8,6 @@ meshConfig:
   defaultConfig:
     proxyMetadata:
       ISTIO_META_DNS_CAPTURE: "true"
-      ISTIO_META_DNS_AUTO_ALLOCATE: "true"
       ISTIO_META_ROUTER_MODE: "sni-dnat"
 trafficManagement:
   enabled: true
