@@ -2,8 +2,6 @@ FROM ghcr.io/netcracker/qubership/core-base:2.0.0
 
 WORKDIR /workspace
 
-RUN apk update --no-cache
-
 ARG ISTIO_VERSION=1.28.0
 
 # Install istioctl
