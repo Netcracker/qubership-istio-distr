@@ -45,26 +45,3 @@ data:
               limits:
                 cpu: {{ .Values.cni.CPU_LIMIT }}
                 memory: {{ .Values.cni.MEMORY_LIMIT }}
-
-        ingressGateways:
-          - name: istio-ingressgateway
-            enabled: {{ .Values.ingressGateway.ENABLED }}
-            k8s:
-              resources:
-                requests:
-                  cpu: {{ .Values.ingressGateway.CPU_REQUEST }}
-                  memory: {{ .Values.ingressGateway.MEMORY_REQUEST }}
-                limits:
-                  cpu: {{ .Values.ingressGateway.CPU_LIMIT }}
-                  memory: {{ .Values.ingressGateway.MEMORY_LIMIT }}
-        egressGateways:
-          - name: istio-egressgateway
-            enabled: {{ .Values.egressGateway.ENABLED }}
-            k8s:
-              resources:
-                requests:
-                  cpu: {{ .Values.egressGateway.CPU_REQUEST }}
-                  memory: {{ .Values.egressGateway.MEMORY_REQUEST }}
-                limits:
-                  cpu: {{ .Values.egressGateway.CPU_LIMIT }}
-                  memory: {{ .Values.egressGateway.MEMORY_LIMIT }}

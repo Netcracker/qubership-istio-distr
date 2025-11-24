@@ -1,0 +1,129 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "type": "object",
+  "title": "The isio configuration configMap schema",
+  "description": "The JSON schema for istio deployer values file.",
+  "default": { },
+  "properties": {
+    "SERVICE_NAME": {
+      "type": "string"
+    },
+    "NAMESPACE": {
+      "type": "string"
+    },
+    "IMAGE_REPOSITORY": {
+      "type": "string"
+    },
+    "TAG": {
+      "type": "string"
+    },
+    "CPU_REQUEST": {
+      "type": "string"
+    },
+    "CPU_LIMIT": {
+      "type": "string"
+    },
+    "MEMORY_LIMIT": {
+      "type": "string"
+    },
+    "SA_NAME": {
+      "type": "string"
+    },
+    "meshConfig": {
+      "type": "object",
+      "properties": {
+        "defaultConfig": {
+          "type": "object",
+          "properties": {
+            "proxyMetadata": {
+              "type": "object",
+              "properties": {
+                "ISTIO_META_DNS_CAPTURE": {
+                  "type": "string"
+                },
+                "ISTIO_META_ROUTER_MODE": {
+                  "type": "string"
+                }
+              },
+              "required": [
+              ]
+            }
+          },
+          "required": [
+          ]
+        }
+      },
+      "required": [
+      ]
+    },
+    "trafficManagement": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        }
+      },
+      "required": []
+    },
+    "pilot": {
+      "type": "object",
+      "properties": {
+        "CPU_REQUEST": {
+          "type": "string"
+        },
+        "CPU_LIMIT": {
+          "type": "string"
+        },
+        "MEMORY_REQUEST": {
+          "type": "string"
+        },
+        "MEMORY_LIMIT": {
+          "type": "string"
+        }
+      },
+      "required": [
+      ]
+    },
+    "ztunnel": {
+      "type": "object",
+      "properties": {
+        "CPU_REQUEST": {
+          "type": "string"
+        },
+        "CPU_LIMIT": {
+          "type": "string"
+        },
+        "MEMORY_REQUEST": {
+          "type": "string"
+        },
+        "MEMORY_LIMIT": {
+          "type": "string"
+        }
+      },
+      "required": [
+      ]
+    },
+    "cni": {
+      "type": "object",
+      "properties": {
+        "CPU_REQUEST": {
+          "type": "string"
+        },
+        "CPU_LIMIT": {
+          "type": "string"
+        },
+        "MEMORY_REQUEST": {
+          "type": "string"
+        },
+        "MEMORY_LIMIT": {
+          "type": "string"
+        }
+      },
+      "required": [
+      ]
+    }
+  },
+  "required": [
+    "SA_NAME"
+  ]
+}
