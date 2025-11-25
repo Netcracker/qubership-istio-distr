@@ -65,8 +65,7 @@ And apply processed file (install.yml) instead of helm install usage
 
 The kubernetes job will run istio deployment in case of valid profile used 
 
-docker run --rm -v $HOME\.kube:/root/.kube -v .\:/con
-fig istio-deployer:latest /bin/bash -c " istioctl install -y -f config/install.yaml"
+docker run --rm -v $HOME\.kube:/root/.kube -v .\:/config istio-deployer:latest /bin/bash -c " istioctl install -y -f config/install.yaml"
 
 ### Prerequisites
 For deploying Istio Ambient Mode, the service account requires specific permissions to operate correctly, especially because Ambient Mode runs as a sidecar-less, data-plane-only mode that relies on a control plane component to handle proxy injection and configuration.

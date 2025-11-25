@@ -1,11 +1,10 @@
 FROM ghcr.io/netcracker/qubership/core-base:2.0.0
 
+USER root
 WORKDIR /workspace
 
 ARG ISTIO_VERSION=1.28.0
 LABEL maintainer="qubership"
-
-USER root
 
 # Install istioctl
 RUN curl -L https://istio.io/downloadIstio | ISTIO_VERSION=${ISTIO_VERSION} TARGET_ARCH=amd64 sh - && \
@@ -13,6 +12,7 @@ RUN curl -L https://istio.io/downloadIstio | ISTIO_VERSION=${ISTIO_VERSION} TARG
     istioctl version
 
 COPY --chown=10001:0 --chmod=755 ./entrypoint.sh  /workspace/entrypoint.sh
+RUN chown 10001:0 /workspace/*
 
 USER 10001:10001
 
