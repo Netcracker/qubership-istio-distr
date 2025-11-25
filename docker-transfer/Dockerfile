@@ -1,4 +1,4 @@
 FROM scratch
 
 # Transfer
-COPY helm-templates /charts
+COPY helm-templates /helm-templates
