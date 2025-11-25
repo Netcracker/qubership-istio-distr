@@ -8,8 +8,8 @@ LABEL maintainer="qubership"
 
 # Install istioctl
 RUN curl -L https://istio.io/downloadIstio | ISTIO_VERSION=${ISTIO_VERSION} TARGET_ARCH=amd64 sh - && \
-    ln -sf $(pwd)/istio-*/bin/istioctl /usr/local/bin/istioctl && \
-    istioctl version
+    ln -sf $(pwd)/istio-*/bin/istioctl /usr/local/bin/istioctl 
+RUN istioctl version --remote=false
 
 COPY --chown=10001:0 --chmod=755 ./entrypoint.sh  /workspace/entrypoint.sh
 RUN chown 10001:0 /workspace/*
