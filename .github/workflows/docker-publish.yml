@@ -58,7 +58,9 @@ jobs:
           curl -L https://istio.io/downloadIstio | ISTIO_VERSION=${ISTIO_VERSION} TARGET_ARCH=amd64 sh - 
           ln -sf $(pwd)/istio-*/bin/istioctl /usr/local/bin/istioctl 
           istioctl manifest generate --set profile=ambient | grep 'image: docker' > images.yaml
-          awk -F': ' ' /^[[:space:]]*image:/ { match($0,/^[[:space:]]*/); indent=substr($0,RSTART,RLENGTH); val=$2; n=split(val,parts,"/"); last=parts[n]; split(last,sub,":"); name=sub[1]; print indent name "-image: " val; next } {print}' images.yaml > images.yaml.tmp 
+          cat images.yaml
+
+          awk '/image:/ { sub(/:/, ": "); split($0, parts, /[:/ ]+/); name = parts[length(parts)-1]; init=$0; sub(/^[ \t]+/, "", init); print name "-" init }' images.yaml > images.yaml.tmp 
           echo "ghcr.io/${{ env.GITHUB_GROUP }}/qubership-istio-deployer:${ISTIO_MINOR_VERSION}-${{ env.TAG_NAME }}" >> images.yaml.tmp
           mv images.yaml.tmp $GITHUB_WORKSPACE/helm-templates/istio-deployer/values-images.yaml 
 
