@@ -50,8 +50,8 @@ jobs:
 
       - name: Load configuration
         run: |
-          istio-version=$(grep "ISTIO_VERSION" $GITHUB_WORKSPACE/.github/configuration.yml | awk -F': ' '{print $2}')
-          istio-minor-version=$(echo "${istio-version%.*}")
+          istio-version="$(grep "ISTIO_VERSION" $GITHUB_WORKSPACE/.github/configuration.yml | awk -F': ' '{print $2}')"
+          istio-minor-version="$(echo "${istio-version%.*}")"
           echo istio-version=${istio-version} >> "$GITHUB_OUTPUT"  
           echo istio-minor-version=${istio-minor-version} >> "$GITHUB_OUTPUT"  
           # Get images
