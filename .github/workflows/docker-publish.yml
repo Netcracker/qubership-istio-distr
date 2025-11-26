@@ -65,10 +65,13 @@ jobs:
           cat images.yaml
 
           awk '/image:/ { sub(/:/, ": "); split($0, parts, /[:/ ]+/); name = parts[length(parts)-1]; init=$0; sub(/^[ \t]+/, "", init); print name "-" init }' images.yaml > images.yaml.tmp 
-          echo "istio-deployer-image: ghcr.io/${{ env.GITHUB_GROUP }}/qubership-istio-deployer:${ISTIO_MINOR_VERSION}-${{ env.TAG_NAME }}" >> images.yaml.tmp
+          echo "qubership-istio-deployer-image: ghcr.io/${{ env.GITHUB_GROUP }}/qubership-istio-deployer:${ISTIO_MINOR_VERSION}-${{ env.TAG_NAME }}" >> images.yaml.tmp
           cat images.yaml.tmp
 
           mv images.yaml.tmp $GITHUB_WORKSPACE/helm-templates/istio-deployer/values-images.yaml 
+
+          git add -u
+          git commit -m 'updating values-images.yaml  before release'
 
   multiplatform_build:
     needs: [ load-configuration ]

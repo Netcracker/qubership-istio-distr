@@ -1,0 +1,4 @@
+install-cni-image:  docker.io/istio/install-cni:1.28.0-distroless
+ztunnel-image:  docker.io/istio/ztunnel:1.28.0-distroless
+pilot-image:  docker.io/istio/pilot:1.28.0-distroless
+qubership-istio-deployer-image: ghcr.io/Netcracker/qubership-istio-deployer:1.28-1.0.0
