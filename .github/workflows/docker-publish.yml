@@ -53,7 +53,9 @@ jobs:
           ISTIO_VERSION="$(grep "ISTIO_VERSION" $GITHUB_WORKSPACE/.github/configuration.yml | awk -F': ' '{print $2}')"
           ISTIO_MINOR_VERSION="$(echo "${ISTIO_VERSION%.*}")"
           echo istio-version=${ISTIO_VERSION}
-          echo istio-minor-version=${ISTIO_MINOR_VERSION}
+          
+          echo istio-version="${ISTIO_VERSION}" >> "$GITHUB_OUTPUT"  
+          echo istio-minor-version="${ISTIO_MINOR_VERSION}" >> "$GITHUB_OUTPUT" 
  
           # Get images
           curl -L https://istio.io/downloadIstio | ISTIO_VERSION=${ISTIO_VERSION} TARGET_ARCH=amd64 sh - 
@@ -66,11 +68,6 @@ jobs:
           cat images.yaml.tmp
 
           mv images.yaml.tmp $GITHUB_WORKSPACE/helm-templates/istio-deployer/values-images.yaml 
-
-          echo istio-version="${ISTIO_VERSION}" >> "$GITHUB_OUTPUT"  
-          echo istio-minor-version="${ISTIO_MINOR_VERSION}" >> "$GITHUB_OUTPUT" 
-
-          echo "$GITHUB_OUTPUT" 
 
   multiplatform_build:
     needs: [ load-configuration ]
@@ -118,6 +115,6 @@ jobs:
           file: ${{ matrix.component.file }}
           platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name != 'pull_request' && github.actor != 'dependabot[bot]' }}
-          tags: "ghcr.io/${{ env.GITHUB_GROUP }}/${{ matrix.component.name }}:${{ needs.load_configuration.outputs.istio-minor-version }}-${{ env.TAG_NAME }},ghcr.io/${{ env.GITHUB_GROUP }}/${{ matrix.component.name }}:${{ needs.load_configuration.outputs.istio-minor-version }}-latest"
+          tags: "ghcr.io/${{ env.GITHUB_GROUP }}/${{ matrix.component.name }}:${{ needs.load-configuration.outputs.istio-minor-version }}-${{ env.TAG_NAME }},ghcr.io/${{ env.GITHUB_GROUP }}/${{ matrix.component.name }}:${{ needs.load-configuration.outputs.istio-minor-version }}-latest"
           provenance: false
-          build-args: ISTIO_VERSION=${{ needs.load_configuration.outputs.istio-version }}
+          build-args: ISTIO_VERSION=${{ needs.load-configuration.outputs.istio-version }}
