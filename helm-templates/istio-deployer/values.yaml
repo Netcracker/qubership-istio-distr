@@ -1,6 +1,7 @@
 SERVICE_NAME: istio-deployer
 NAMESPACE: istio-system
-IMAGE_REPOSITORY: ghcr.io/netcracker/istio-deployer
+IMAGE_REPOSITORY: ghcr.io/netcracker/
+IMAGE_NAME: qubership-istio-deployer
 TAG: latest
 SA_NAME: default
 
