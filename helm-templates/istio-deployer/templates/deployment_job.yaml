@@ -11,7 +11,7 @@ spec:
       serviceAccountName: '{{ .Values.SA_NAME }}'
       containers:
       - name: '{{ .Values.SERVICE_NAME }}'
-        image: '{{ .Values.IMAGE_REPOSITORY }}:{{ .Values.TAG }}'
+        image: '{{ .Values.IMAGE_REPOSITORY }}{{ IMAGE_NAME }}:{{ .Values.TAG }}'
         imagePullPolicy: Always
         args:
         - entrypoint.sh

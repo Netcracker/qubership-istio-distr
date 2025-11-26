@@ -1,7 +1,8 @@
 SERVICE_NAME: istio-deployer
 NAMESPACE: istio-system
-IMAGE_REPOSITORY: ghcr.io/netcracker/istio-deployer
-TAG: latest
+IMAGE_REPOSITORY: ghcr.io/netcracker/
+IMAGE_NAME: qubership-istio-deployer
+TAG: 1.28-latest
 SA_NAME: default
 
 meshConfig:

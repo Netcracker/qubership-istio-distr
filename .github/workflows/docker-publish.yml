@@ -39,7 +39,39 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  load-configuration:
+    runs-on: ubuntu-latest
+    outputs:
+      istio-version: ${{ steps.load_configuration.outputs.istio-version }}
+      istio-minor-version: ${{ steps.load_configuration.outputs.istio-minor-version }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Load configuration
+        id: load_configuration
+        run: |
+          ISTIO_VERSION="$(grep "ISTIO_VERSION" $GITHUB_WORKSPACE/.github/configuration.yml | awk -F': ' '{print $2}')"
+          ISTIO_MINOR_VERSION="$(echo "${ISTIO_VERSION%.*}")"
+          echo istio-version=${ISTIO_VERSION}
+          
+          echo istio-version="${ISTIO_VERSION}" >> "$GITHUB_OUTPUT"  
+          echo istio-minor-version="${ISTIO_MINOR_VERSION}" >> "$GITHUB_OUTPUT" 
+ 
+          # Get images
+          curl -L https://istio.io/downloadIstio | ISTIO_VERSION=${ISTIO_VERSION} TARGET_ARCH=amd64 sh - 
+          ln -sf $(pwd)/istio-*/bin/istioctl /usr/local/bin/istioctl 
+          istioctl manifest generate --set profile=ambient | grep 'image: docker' > images.yaml
+          cat images.yaml
+
+          awk '/image:/ { sub(/:/, ": "); split($0, parts, /[:/ ]+/); name = parts[length(parts)-1]; init=$0; sub(/^[ \t]+/, "", init); print name "-" init }' images.yaml > images.yaml.tmp 
+          echo "istio-deployer-image: ghcr.io/${{ env.GITHUB_GROUP }}/qubership-istio-deployer:${ISTIO_MINOR_VERSION}-${{ env.TAG_NAME }}" >> images.yaml.tmp
+          cat images.yaml.tmp
+
+          mv images.yaml.tmp $GITHUB_WORKSPACE/helm-templates/istio-deployer/values-images.yaml 
+
   multiplatform_build:
+    needs: [ load-configuration ]
     if: github.event.pull_request.user.login != 'dependabot[bot]' || github.event_name == 'pull_request'
     strategy:
       fail-fast: false
@@ -84,5 +116,6 @@ jobs:
           file: ${{ matrix.component.file }}
           platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name != 'pull_request' && github.actor != 'dependabot[bot]' }}
-          tags: ghcr.io/${{ env.GITHUB_GROUP }}/${{ matrix.component.name }}:${{ env.TAG_NAME }}
+          tags: "ghcr.io/${{ env.GITHUB_GROUP }}/${{ matrix.component.name }}:${{ needs.load-configuration.outputs.istio-minor-version }}-${{ env.TAG_NAME }},ghcr.io/${{ env.GITHUB_GROUP }}/${{ matrix.component.name }}:${{ needs.load-configuration.outputs.istio-minor-version }}-latest"
           provenance: false
+          build-args: ISTIO_VERSION=${{ needs.load-configuration.outputs.istio-version }}
