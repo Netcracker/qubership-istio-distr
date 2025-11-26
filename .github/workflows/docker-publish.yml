@@ -52,8 +52,9 @@ jobs:
         run: |
           ISTIO_VERSION="$(grep "ISTIO_VERSION" $GITHUB_WORKSPACE/.github/configuration.yml | awk -F': ' '{print $2}')"
           ISTIO_MINOR_VERSION="$(echo "${ISTIO_VERSION%.*}")"
-          echo istio-version=${ISTIO_VERSION} >> "$GITHUB_OUTPUT"  
-          echo istio-minor-version=${ISTIO_MINOR_VERSION} >> "$GITHUB_OUTPUT"  
+          echo istio-version=${ISTIO_VERSION}
+          echo istio-minor-version=${ISTIO_MINOR_VERSION}
+ 
           # Get images
           curl -L https://istio.io/downloadIstio | ISTIO_VERSION=${ISTIO_VERSION} TARGET_ARCH=amd64 sh - 
           ln -sf $(pwd)/istio-*/bin/istioctl /usr/local/bin/istioctl 
@@ -62,7 +63,12 @@ jobs:
 
           awk '/image:/ { sub(/:/, ": "); split($0, parts, /[:/ ]+/); name = parts[length(parts)-1]; init=$0; sub(/^[ \t]+/, "", init); print name "-" init }' images.yaml > images.yaml.tmp 
           echo "ghcr.io/${{ env.GITHUB_GROUP }}/qubership-istio-deployer:${ISTIO_MINOR_VERSION}-${{ env.TAG_NAME }}" >> images.yaml.tmp
+          cat images.yaml.tmp
+
           mv images.yaml.tmp $GITHUB_WORKSPACE/helm-templates/istio-deployer/values-images.yaml 
+
+          echo istio-version=${ISTIO_VERSION} >> "$GITHUB_OUTPUT"  
+          echo istio-minor-version=${ISTIO_MINOR_VERSION} >> "$GITHUB_OUTPUT" 
 
   multiplatform_build:
     needs: [ load-configuration ]
