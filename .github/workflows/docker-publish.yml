@@ -42,13 +42,14 @@ jobs:
   load-configuration:
     runs-on: ubuntu-latest
     outputs:
-      istio-version: ${{ steps.load_component.outputs.istio-version }}
-      istio-minor-version: ${{ steps.load_component.outputs.istio-minor-version }}
+      istio-version: ${{ steps.load_configuration.outputs.istio-version }}
+      istio-minor-version: ${{ steps.load_configuration.outputs.istio-minor-version }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
       - name: Load configuration
+        id: load_configuration
         run: |
           ISTIO_VERSION="$(grep "ISTIO_VERSION" $GITHUB_WORKSPACE/.github/configuration.yml | awk -F': ' '{print $2}')"
           ISTIO_MINOR_VERSION="$(echo "${ISTIO_VERSION%.*}")"

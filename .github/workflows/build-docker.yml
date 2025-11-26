@@ -9,12 +9,13 @@ jobs:
   load-configuration:
     runs-on: ubuntu-latest
     outputs:
-      istio-version: ${{ steps.load_component.outputs.istio-version }}
+      istio-version: ${{ steps.load_configuration.outputs.istio-version }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
       - name: Load configuration
+        id: load_configuration
         run: | 
           echo "istio-version=$(grep "ISTIO_VERSION" $GITHUB_WORKSPACE/.github/configuration.yml | awk -F': ' '{print $2}')" >> "$GITHUB_OUTPUT"     
 
@@ -47,4 +48,4 @@ jobs:
           context: ./
           file: Dockerfile
           platforms: linux/amd64   
-          build-args: ISTIO_VERSION=${{ needs.load_configuration.outputs.istio-version }}
+          build-args: ISTIO_VERSION=${{ needs.load-configuration.outputs.istio-version }}
