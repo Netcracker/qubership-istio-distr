@@ -68,18 +68,13 @@ jobs:
           echo "qubership_istio_deployer_image: ghcr.io/${{ env.GITHUB_GROUP }}/qubership-istio-deployer:${ISTIO_MINOR_VERSION}-${{ env.TAG_NAME }}" >> images.yaml.tmp
           cat images.yaml.tmp
 
-          cat images.yaml.tmp >> $GITHUB_WORKSPACE/helm-templates/istio-deployer/values.yaml 
+          cat images.yaml.tmp >> $GITHUB_WORKSPACE/helm-templates/istio-deployer/values.yaml    
 
-      - name: Commit changes
-        run: |
-          git config user.email "actions@github.com"
-          git config user.name "actions"
-
-          git add -u
-          git commit -m 'updating values.yaml before release'
-          git push
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}         
+      - name: Upload values.yaml
+        uses: actions/upload-artifact@v3
+        with:
+          name: istio-values
+          path: $GITHUB_WORKSPACE/helm-templates/istio-deployer/values.yaml
 
   multiplatform_build:
     needs: [ load-configuration ]
@@ -98,6 +93,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Download values.yaml
+        uses: actions/download-artifact@v3
+        with:
+          name: istio-values
+          path: $GITHUB_WORKSPACE/helm-templates/istio-deployer
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
       - name: Set up Docker Buildx
