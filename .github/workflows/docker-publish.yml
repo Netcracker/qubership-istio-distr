@@ -76,7 +76,8 @@ jobs:
           git config user.name "actions"
 
           git add -u
-          git commit -m 'updating values-images.yaml before release'
+          git commit -m 'updating values.yaml before release'
+          git push
 
   multiplatform_build:
     needs: [ load-configuration ]
