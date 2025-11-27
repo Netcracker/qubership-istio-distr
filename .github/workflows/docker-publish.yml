@@ -78,6 +78,8 @@ jobs:
           git add -u
           git commit -m 'updating values.yaml before release'
           git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}         
 
   multiplatform_build:
     needs: [ load-configuration ]
