@@ -64,8 +64,8 @@ jobs:
           istioctl manifest generate --set profile=ambient | grep 'image: docker' > images.yaml
           cat images.yaml
 
-          awk '/image:/ { sub(/:/, ": "); split($0, parts, /[:/ ]+/); name = parts[length(parts)-1]; init=$0; sub(/^[ \t]+/, "", init); print name "-" init }' images.yaml > images.yaml.tmp 
-          echo "qubership-istio-deployer-image: ghcr.io/${{ env.GITHUB_GROUP }}/qubership-istio-deployer:${ISTIO_MINOR_VERSION}-${{ env.TAG_NAME }}" >> images.yaml.tmp
+          awk '/image:/ { sub(/:/, ": "); split($0, parts, /[:/ ]+/); name = parts[length(parts)-1]; sub("-","_", name); init=$0; sub(/^[ \t]+/, "", init); print name "_" init }' images.yaml > images.yaml.tmp 
+          echo "qubership_istio_deployer_image: ghcr.io/${{ env.GITHUB_GROUP }}/qubership-istio-deployer:${ISTIO_MINOR_VERSION}-${{ env.TAG_NAME }}" >> images.yaml.tmp
           cat images.yaml.tmp
 
           cat images.yaml.tmp >> $GITHUB_WORKSPACE/helm-templates/istio-deployer/values.yaml 
