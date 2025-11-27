@@ -68,13 +68,11 @@ jobs:
           echo "qubership_istio_deployer_image: ghcr.io/${{ env.GITHUB_GROUP }}/qubership-istio-deployer:${ISTIO_MINOR_VERSION}-${{ env.TAG_NAME }}" >> images.yaml.tmp
           cat images.yaml.tmp
 
-          cat images.yaml.tmp >> $GITHUB_WORKSPACE/helm-templates/istio-deployer/values.yaml    
-
       - name: Upload values.yaml
         uses: actions/upload-artifact@v4
         with:
           name: istio-values
-          path: $GITHUB_WORKSPACE/helm-templates/istio-deployer/values.yaml
+          path: images.yaml.tmp
 
   multiplatform_build:
     needs: [ load-configuration ]
@@ -98,7 +96,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: istio-values
-          path: $GITHUB_WORKSPACE/helm-templates/istio-deployer
+          path: $GITHUB_WORKSPACE/helm-templates/istio-deployer/values.yaml
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
