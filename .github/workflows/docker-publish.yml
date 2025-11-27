@@ -68,7 +68,7 @@ jobs:
           echo "qubership-istio-deployer-image: ghcr.io/${{ env.GITHUB_GROUP }}/qubership-istio-deployer:${ISTIO_MINOR_VERSION}-${{ env.TAG_NAME }}" >> images.yaml.tmp
           cat images.yaml.tmp
 
-          mv images.yaml.tmp $GITHUB_WORKSPACE/helm-templates/istio-deployer/values-images.yaml 
+          cat images.yaml.tmp >> $GITHUB_WORKSPACE/helm-templates/istio-deployer/values.yaml 
 
       - name: Commit changes
         run: |

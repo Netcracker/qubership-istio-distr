@@ -11,7 +11,7 @@ spec:
       serviceAccountName: '{{ .Values.SA_NAME }}'
       containers:
       - name: '{{ .Values.SERVICE_NAME }}'
-        image: '{{ .Values.IMAGE_REPOSITORY }}{{ .Values.IMAGE_NAME }}:{{ .Values.TAG }}'
+        image: '{{ .Values.qubership-istio-deployer-image}}'
         imagePullPolicy: Always
         args:
         - entrypoint.sh
