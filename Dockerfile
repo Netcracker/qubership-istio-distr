@@ -1,6 +1,6 @@
 FROM ghcr.io/netcracker/qubership/core-base:2.0.0
 
-USER root
+USER 10001:10001
 WORKDIR /workspace
 
 ARG ISTIO_VERSION=1.28.0
@@ -13,7 +13,5 @@ RUN istioctl version --remote=false
 
 COPY --chown=10001:0 --chmod=755 ./entrypoint.sh  /workspace/entrypoint.sh
 RUN chown 10001:0 /workspace/*
-
-USER 10001:10001
 
 CMD ["/workspace/entrypoint.sh"]
