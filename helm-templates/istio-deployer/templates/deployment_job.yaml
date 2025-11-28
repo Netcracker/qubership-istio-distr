@@ -14,7 +14,7 @@ spec:
         image: '{{ .Values.qubership_istio_deployer_image}}'
         imagePullPolicy: Always
         args:
-        - entrypoint.sh
+        - /workspace/entrypoint.sh
         env:
         - name: DEPLOYMENT_SESSION_ID
           value: '{{ .Values.DEPLOYMENT_SESSION_ID }}'
