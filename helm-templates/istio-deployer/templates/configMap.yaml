@@ -12,6 +12,9 @@ data:
       namespace: {{ .Values.NAMESPACE }}
     spec:
       profile: ambient
+      {{- if .Values.global.hub }}
+      hub: {{ .Values.global.hub }}
+      {{- end }}
       {{- if .Values.meshConfig }}
       meshConfig:
         {{ toYaml .Values.meshConfig | nindent 8 }}
