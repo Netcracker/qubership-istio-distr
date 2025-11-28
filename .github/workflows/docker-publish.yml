@@ -98,7 +98,10 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: istio-values
-          path: ./helm-templates/istio-deployer/values.yaml
+          path: ./values.yaml
+      - name: Update values.yaml
+        run: |
+          mv ./values.yaml ./helm-templates/istio-deployer/values.yaml     
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
