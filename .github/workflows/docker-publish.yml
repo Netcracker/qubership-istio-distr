@@ -66,10 +66,13 @@ jobs:
 
           awk '/image:/ { sub(/:/, ": "); split($0, parts, /[:/ ]+/); name = parts[length(parts)-1]; sub("-","_", name); init=$0; sub(/^[ \t]+/, "", init); print name "_" init }' images.yaml > images.yaml.tmp 
           cat images.yaml.tmp >> $GITHUB_WORKSPACE/helm-templates/istio-deployer/values.yaml
-
-          ISTIO_DEPLOYER_IMAGE="ghcr.io/${GITHUB_GROUP}/qubership-istio-deployer:${ISTIO_MINOR_VERSION}-${TAG_NAME}"
+            if echo ${TAG_NAME} | grep ref; then
+              TAG_CLEANED=$(echo ${TAG_NAME} | sed 's@refs/tags/@@;s@refs/heads/@@;s@/@_@g')
+            else
+              TAG_CLEANED=${TAG_NAME}
+            fi
+          ISTIO_DEPLOYER_IMAGE="ghcr.io/${GITHUB_GROUP}/qubership-istio-deployer:${ISTIO_MINOR_VERSION}-${TAG_CLEANED}"
           sed -i "s#^[[:space:]]*qubership_istio_deployer_image.*#qubership_istio_deployer_image: ${ISTIO_DEPLOYER_IMAGE}#g" "$GITHUB_WORKSPACE/helm-templates/istio-deployer/values.yaml"
-          cat $GITHUB_WORKSPACE/helm-templates/istio-deployer/values.yaml
 
       - name: Upload values.yaml
         uses: actions/upload-artifact@v4
@@ -102,7 +105,8 @@ jobs:
           path: ./
       - name: Update values.yaml
         run: |
-          mv ./values.yaml $GITHUB_WORKSPACE/helm-templates/istio-deployer/values.yaml   
+          mv ./values.yaml $GITHUB_WORKSPACE/helm-templates/istio-deployer/values.yaml
+          cat $GITHUB_WORKSPACE/helm-templates/istio-deployer/values.yaml
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
