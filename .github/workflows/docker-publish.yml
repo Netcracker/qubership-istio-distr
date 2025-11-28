@@ -74,7 +74,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: istio-values
-          path: $GITHUB_WORKSPACE/helm-templates/istio-deployer/values.yaml
+          path: ./helm-templates/istio-deployer/values.yaml
 
   multiplatform_build:
     needs: [ load-configuration ]
@@ -98,7 +98,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: istio-values
-          path: $GITHUB_WORKSPACE/helm-templates/istio-deployer/values.yaml
+          path: ./helm-templates/istio-deployer/values.yaml
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
