@@ -46,7 +46,9 @@ jobs:
       istio-minor-version: ${{ steps.load_configuration.outputs.istio-minor-version }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.base_ref }} 
 
       - name: Load configuration
         id: load_configuration
@@ -82,14 +84,6 @@ jobs:
             ./helm-templates/istio-deployer/values.yaml
             ./helm-templates/istio-deployer/images.yaml
 
-      - name: Commit changes
-        run: |
-          git config user.email "actions@github.com"
-          git config user.name "actions"
-
-          git add -u
-          git commit -m 'updating values-images.yaml before release'
-
   multiplatform_build:
     needs: [ load-configuration ]
     strategy:
@@ -105,7 +99,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.base_ref }} 
+          fetch-depth: 0
       - name: Prepare Tag
         run: echo "TAG_NAME=$(echo ${TAG_NAME} | sed 's@refs/tags/@@;s@refs/heads/@@;s@/@_@g')" >> $GITHUB_ENV
       - name: Prepare Group
@@ -127,7 +124,7 @@ jobs:
               "context": "${{ matrix.component.context }}"
             }]
           checkout: false
-          ref: ${{ github.ref }} 
+          ref: ${{ github.base_ref }} 
           download-artifact: true
           download-artifact-name: images_files
           download-artifact-path: ./helm-templates/istio-deployer/
@@ -136,5 +133,6 @@ jobs:
           tags: "${{ needs.load-configuration.outputs.istio-minor-version }}-${{ env.TAG_NAME }},${{ needs.load-configuration.outputs.istio-minor-version }}-latest"
           registry: ghcr.io
           dry-run: ${{ github.event.pull_request.user.login == 'dependabot[bot]' ||  github.event_name == 'push' }} 
+          debug: true
         env:
            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
