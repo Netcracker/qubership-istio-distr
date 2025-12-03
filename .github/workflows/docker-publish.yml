@@ -126,7 +126,8 @@ jobs:
               "file": "${{ matrix.component.file }}",
               "context": "${{ matrix.component.context }}"
             }]
-          checkout: false    
+          checkout: false
+          ref: ${{ github.ref }} 
           download-artifact: true
           download-artifact-name: images_files
           download-artifact-path: ./helm-templates/istio-deployer/
