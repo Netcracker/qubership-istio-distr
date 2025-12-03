@@ -12,7 +12,13 @@ data:
       namespace: {{ .Values.NAMESPACE }}
     spec:
       profile: ambient
-      meshConfig: {{ .Values.meshConfig }}
+      {{- if .Values.global.hub }}
+      hub: {{ .Values.global.hub }}
+      {{- end }}
+      {{- if .Values.meshConfig }}
+      meshConfig:
+        {{ toYaml .Values.meshConfig | nindent 8 }}
+      {{- end }}
       components:
         pilot:
           enabled: true

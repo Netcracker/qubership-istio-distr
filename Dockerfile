@@ -11,9 +11,6 @@ RUN curl -L https://istio.io/downloadIstio | ISTIO_VERSION=${ISTIO_VERSION} TARG
     ln -sf $(pwd)/istio-*/bin/istioctl /usr/local/bin/istioctl 
 RUN istioctl version --remote=false
 
-COPY --chown=10001:0 --chmod=755 ./entrypoint.sh  /workspace/entrypoint.sh
-RUN chown 10001:0 /workspace/*
-
-USER 10001:10001
+COPY --chmod=755 ./entrypoint.sh  /workspace/entrypoint.sh
 
 CMD ["/workspace/entrypoint.sh"]

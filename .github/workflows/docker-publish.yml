@@ -46,7 +46,9 @@ jobs:
       istio-minor-version: ${{ steps.load_configuration.outputs.istio-minor-version }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.base_ref }} 
 
       - name: Load configuration
         id: load_configuration
@@ -62,25 +64,28 @@ jobs:
           curl -L https://istio.io/downloadIstio | ISTIO_VERSION=${ISTIO_VERSION} TARGET_ARCH=amd64 sh - 
           ln -sf $(pwd)/istio-*/bin/istioctl /usr/local/bin/istioctl 
           istioctl manifest generate --set profile=ambient | grep 'image: docker' > images.yaml
-          cat images.yaml
 
-          awk '/image:/ { sub(/:/, ": "); split($0, parts, /[:/ ]+/); name = parts[length(parts)-1]; init=$0; sub(/^[ \t]+/, "", init); print name "-" init }' images.yaml > images.yaml.tmp 
-          echo "qubership-istio-deployer-image: ghcr.io/${{ env.GITHUB_GROUP }}/qubership-istio-deployer:${ISTIO_MINOR_VERSION}-${{ env.TAG_NAME }}" >> images.yaml.tmp
-          cat images.yaml.tmp
+          awk '/image:/ { sub(/:/, ": "); split($0, parts, /[:/ ]+/); name = parts[length(parts)-1]; sub("-","_", name); init=$0; sub(/^[ \t]+/, "", init); print name "_" init }' images.yaml > images.yaml.tmp 
+          cat images.yaml.tmp >> ./helm-templates/istio-deployer/images.yaml
+          # Set version
+          if echo ${TAG_NAME} | grep ref; then
+            TAG_CLEANED=$(echo ${TAG_NAME} | sed 's@refs/tags/@@;s@refs/heads/@@;s@/@_@g')
+          else
+            TAG_CLEANED=${TAG_NAME}
+          fi
+          ISTIO_DEPLOYER_IMAGE="ghcr.io/${GITHUB_GROUP}/qubership-istio-deployer:${ISTIO_MINOR_VERSION}-${TAG_CLEANED}"
+          sed -i "s#^[[:space:]]*qubership_istio_deployer_image.*#qubership_istio_deployer_image: ${ISTIO_DEPLOYER_IMAGE}#g" "./helm-templates/istio-deployer/values.yaml"
 
-          mv images.yaml.tmp $GITHUB_WORKSPACE/helm-templates/istio-deployer/values-images.yaml 
-
-      - name: Commit changes
-        run: |
-          git config user.email "actions@github.com"
-          git config user.name "actions"
-
-          git add -u
-          git commit -m 'updating values-images.yaml before release'
+      - name: Upload changes
+        uses: actions/upload-artifact@v4
+        with:
+          name: images_files
+          path: |
+            ./helm-templates/istio-deployer/values.yaml
+            ./helm-templates/istio-deployer/images.yaml
 
   multiplatform_build:
     needs: [ load-configuration ]
-    if: github.event.pull_request.user.login != 'dependabot[bot]' || github.event_name == 'pull_request'
     strategy:
       fail-fast: false
       matrix:
@@ -94,17 +99,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
+        uses: actions/checkout@v6
         with:
-          registry: ghcr.io
-          username: ${GITHUB_ACTOR}
-          password: ${{secrets.GITHUB_TOKEN}}
+          ref: ${{ github.base_ref }} 
+          fetch-depth: 0
       - name: Prepare Tag
         run: echo "TAG_NAME=$(echo ${TAG_NAME} | sed 's@refs/tags/@@;s@refs/heads/@@;s@/@_@g')" >> $GITHUB_ENV
       - name: Prepare Group
@@ -117,13 +115,24 @@ jobs:
           component-tag: ${{ env.TAG_NAME }}
           access-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Build and push
-        uses: docker/build-push-action@v6
+        uses: netcracker/qubership-workflow-hub/actions/docker-action@main
         with:
-          no-cache: true
-          context: ${{ matrix.component.context }}
-          file: ${{ matrix.component.file }}
+          component: |
+            [{
+              "name": "${{ matrix.component.name }}", 
+              "file": "${{ matrix.component.file }}",
+              "context": "${{ matrix.component.context }}"
+            }]
+          checkout: false
+          ref: ${{ github.base_ref }} 
+          download-artifact: true
+          download-artifact-name: images_files
+          download-artifact-path: ./helm-templates/istio-deployer/
+          download-artifact-merge-multiple: true  
           platforms: linux/amd64,linux/arm64
-          push: ${{ github.event_name != 'pull_request' && github.actor != 'dependabot[bot]' }}
-          tags: "ghcr.io/${{ env.GITHUB_GROUP }}/${{ matrix.component.name }}:${{ needs.load-configuration.outputs.istio-minor-version }}-${{ env.TAG_NAME }},ghcr.io/${{ env.GITHUB_GROUP }}/${{ matrix.component.name }}:${{ needs.load-configuration.outputs.istio-minor-version }}-latest"
-          provenance: false
-          build-args: ISTIO_VERSION=${{ needs.load-configuration.outputs.istio-version }}
+          tags: "${{ needs.load-configuration.outputs.istio-minor-version }}-${{ env.TAG_NAME }},${{ needs.load-configuration.outputs.istio-minor-version }}-latest"
+          registry: ghcr.io
+          dry-run: ${{ github.event.pull_request.user.login == 'dependabot[bot]' ||  github.event_name == 'push' }} 
+          debug: true
+        env:
+           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -2,8 +2,7 @@ SERVICE_NAME: istio-deployer
 NAMESPACE: istio-system
 IMAGE_REPOSITORY: ghcr.io/netcracker/
 IMAGE_NAME: qubership-istio-deployer
-TAG: 1.28-latest
-SA_NAME: default
+SA_NAME: istio-deployer-sa
 
 meshConfig:
   defaultConfig:
@@ -30,4 +29,5 @@ cni:
   MEMORY_REQUEST: "128Mi"
   MEMORY_LIMIT: "512Mi"
 
+qubership_istio_deployer_image: ghcr.io/netcracker/qubership-istio-deployer:1.28-latest
 
