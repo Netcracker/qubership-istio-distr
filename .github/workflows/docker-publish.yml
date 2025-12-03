@@ -84,7 +84,6 @@ jobs:
 
   multiplatform_build:
     needs: [ load-configuration ]
-    if: github.event.pull_request.user.login != 'dependabot[bot]' && (github.event_name == 'pull_request' || github.event_name == 'release')
     strategy:
       fail-fast: false
       matrix:
@@ -126,7 +125,6 @@ jobs:
           platforms: linux/amd64,linux/arm64
           tags: "ghcr.io/${{ env.GITHUB_GROUP }}/${{ matrix.component.name }}:${{ needs.load-configuration.outputs.istio-minor-version }}-${{ env.TAG_NAME }},ghcr.io/${{ env.GITHUB_GROUP }}/${{ matrix.component.name }}:${{ needs.load-configuration.outputs.istio-minor-version }}-latest"
           registry: ghcr.io
-          dry-run: false
-          build-args: ISTIO_VERSION=${{ needs.load-configuration.outputs.istio-version }}
+          dry-run: ${{ github.event.pull_request.user.login == 'dependabot[bot]' ||  github.event_name == 'push' }} 
         env:
            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
