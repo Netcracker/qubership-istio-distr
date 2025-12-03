@@ -82,6 +82,14 @@ jobs:
             ./helm-templates/istio-deployer/values.yaml
             ./helm-templates/istio-deployer/images.yaml
 
+      - name: Commit changes
+        run: |
+          git config user.email "actions@github.com"
+          git config user.name "actions"
+
+          git add -u
+          git commit -m 'updating values-images.yaml before release'
+
   multiplatform_build:
     needs: [ load-configuration ]
     strategy:
