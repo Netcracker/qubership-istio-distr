@@ -47,9 +47,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
-        with:
-          ref: ${{ github.base_ref }} 
-
       - name: Load configuration
         id: load_configuration
         run: |
@@ -92,7 +89,7 @@ jobs:
         component:
           - name: qubership-istio-transfer
             file: docker-transfer/Dockerfile
-            context: ""
+            context: .
           - name: qubership-istio-deployer
             file: ./Dockerfile
             context: .
@@ -100,9 +97,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-        with:
-          ref: ${{ github.base_ref }} 
-          fetch-depth: 0
       - name: Prepare Tag
         run: echo "TAG_NAME=$(echo ${TAG_NAME} | sed 's@refs/tags/@@;s@refs/heads/@@;s@/@_@g')" >> $GITHUB_ENV
       - name: Prepare Group
@@ -124,7 +118,6 @@ jobs:
               "context": "${{ matrix.component.context }}"
             }]
           checkout: false
-          ref: ${{ github.base_ref }} 
           download-artifact: true
           download-artifact-name: images_files
           download-artifact-path: ./helm-templates/istio-deployer/
