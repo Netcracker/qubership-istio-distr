@@ -47,9 +47,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
-        with:
-          ref: ${{ github.base_ref }} 
-
       - name: Load configuration
         id: load_configuration
         run: |
@@ -100,17 +97,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-        with:
-          ref: ${{ github.base_ref }} 
-          fetch-depth: 0
-      - name: Download changes
-        uses: actions/download-artifact@v4
-        with:
-          name: images_files
-          path: ./helm-templates/istio-deployer/
-          merge-multiple: true
-      - name: Display structure of downloaded files
-        run: ls -R ./helm-templates/istio-deployer/     
       - name: Prepare Tag
         run: echo "TAG_NAME=$(echo ${TAG_NAME} | sed 's@refs/tags/@@;s@refs/heads/@@;s@/@_@g')" >> $GITHUB_ENV
       - name: Prepare Group
@@ -132,11 +118,10 @@ jobs:
               "context": "${{ matrix.component.context }}"
             }]
           checkout: false
-          # ref: ${{ github.base_ref }} 
-          # download-artifact: true
-          # download-artifact-name: images_files
-          # download-artifact-path: ./helm-templates/istio-deployer/
-          # download-artifact-merge-multiple: true  
+          download-artifact: true
+          download-artifact-name: images_files
+          download-artifact-path: ./helm-templates/istio-deployer/
+          download-artifact-merge-multiple: true  
           platforms: linux/amd64,linux/arm64
           tags: "${{ needs.load-configuration.outputs.istio-minor-version }}-${{ env.TAG_NAME }},${{ needs.load-configuration.outputs.istio-minor-version }}-latest"
           registry: ghcr.io
