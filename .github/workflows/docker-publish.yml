@@ -92,7 +92,7 @@ jobs:
         component:
           - name: qubership-istio-transfer
             file: docker-transfer/Dockerfile
-            context: ""
+            context: .
           - name: qubership-istio-deployer
             file: ./Dockerfile
             context: .
@@ -108,6 +108,7 @@ jobs:
         with:
           name: images_files
           path: ./helm-templates/istio-deployer/
+          merge-multiple: true
       - name: Display structure of downloaded files
         run: ls -R ./helm-templates/istio-deployer/     
       - name: Prepare Tag
