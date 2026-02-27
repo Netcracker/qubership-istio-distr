@@ -1,0 +1,31 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "assignAutomerge": true,
+  "assigneesFromCodeOwners": true,
+  "reviewersFromCodeOwners": true,
+
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Update ISTIO_VERSION in Dockerfiles",
+      "fileMatch": ["^Dockerfile$"],
+      "matchStrings": [
+        "# renovate: datasource=github-releases depName=istio/istio\\sARG ISTIO_VERSION=(?<currentValue>.+?)\\s"
+      ],
+      "datasourceTemplate": "github-releases",
+      "depNameTemplate": "istio/istio",
+      "versioningTemplate": "semver"
+    }
+  ],
+
+  "packageRules": [
+    {
+      "matchDatasources": ["github-releases"],
+      "matchPackageNames": ["istio/istio"],
+      "allowedVersions": "/^\\d+\\.\\d+\\.\\d+$/", 
+      "automerge": true,
+      "groupName": "istio minor/patch updates"
+    }
+  ],
+  "extends" : [ "github>Netcracker/qubership-core-infra:renovate-core-config" ]
+}

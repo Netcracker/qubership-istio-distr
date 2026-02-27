@@ -3,6 +3,7 @@ FROM ghcr.io/netcracker/qubership/core-base:2.0.0
 USER root
 WORKDIR /workspace
 
+# renovate: datasource=github-releases depName=istio/istio
 ARG ISTIO_VERSION=1.28.0
 LABEL maintainer="qubership"
 
