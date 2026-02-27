@@ -5,7 +5,7 @@ USER root
 WORKDIR /workspace
 
 # renovate: datasource=github-releases depName=istio/istio
-ARG ISTIO_VERSION=1.28.0
+ARG ISTIO_VERSION=1.29.0
 LABEL maintainer="qubership"
 
 # Install istioctl
