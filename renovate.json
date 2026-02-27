@@ -19,7 +19,7 @@
     {
       "customType": "regex",
       "description": "Update ISTIO_VERSION in configuration.yaml",
-      "fileMatch": ["^configuration\\.yaml$"],
+      "fileMatch": ["^configuration\\.yml$"],
       "matchStrings": [
         "ISTIO_VERSION:\\s(?<currentValue>.+)"
       ],
@@ -38,10 +38,10 @@
       "groupName": "istio minor/patch updates"
     },
     {
-      "matchDatasources": ["docker"],
-      "matchPackageNames": ["ghcr.io/netcracker/qubership-core-base"],
-      "automerge": false,
-      "groupName": "core-base Docker image updates"
+      "matchPackagePatterns": ["ghcr.io/netcracker/qubership-core-base"],
+      "groupName": "Base image updates",
+      "rangeStrategy": "bump"
     }
-  ]
+  ],
+  "extends": ["github>Netcracker/qubership-core-infra:renovate-core-config"]
 }
