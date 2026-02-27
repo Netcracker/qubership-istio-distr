@@ -23,7 +23,7 @@
       "matchDatasources": ["github-releases"],
       "matchPackageNames": ["istio/istio"],
       "allowedVersions": "/^\\d+\\.\\d+\\.\\d+$/", 
-      "automerge": true,
+      "automerge": false,
       "groupName": "istio minor/patch updates"
     }
   ],
