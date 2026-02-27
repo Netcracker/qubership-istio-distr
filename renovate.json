@@ -42,6 +42,5 @@
       "groupName": "Base image updates",
       "rangeStrategy": "bump"
     }
-  ],
-  "extends": ["github>Netcracker/qubership-core-infra:renovate-core-config"]
+  ]
 }
