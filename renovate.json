@@ -1,6 +1,6 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "assignAutomerge": true,
+  "assignAutomerge": false,
   "assigneesFromCodeOwners": true,
   "reviewersFromCodeOwners": true,
 
@@ -15,6 +15,17 @@
       "datasourceTemplate": "github-releases",
       "depNameTemplate": "istio/istio",
       "versioningTemplate": "semver"
+    },
+    {
+      "customType": "regex",
+      "description": "Update ISTIO_VERSION in configuration.yaml",
+      "fileMatch": ["^configuration\\.yaml$"],
+      "matchStrings": [
+        "ISTIO_VERSION:\\s(?<currentValue>.+)"
+      ],
+      "datasourceTemplate": "github-releases",
+      "depNameTemplate": "istio/istio",
+      "versioningTemplate": "semver"
     }
   ],
 
@@ -22,10 +33,15 @@
     {
       "matchDatasources": ["github-releases"],
       "matchPackageNames": ["istio/istio"],
-      "allowedVersions": "/^\\d+\\.\\d+\\.\\d+$/", 
+      "allowedVersions": "/^\\d+\\.\\d+\\.\\d+$/",
       "automerge": false,
       "groupName": "istio minor/patch updates"
+    },
+    {
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["ghcr.io/netcracker/qubership-core-base"],
+      "automerge": false,
+      "groupName": "core-base Docker image updates"
     }
-  ],
-  "extends" : [ "github>Netcracker/qubership-core-infra:renovate-core-config" ]
+  ]
 }

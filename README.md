@@ -44,7 +44,7 @@ How to customize:
 
 - Build docker image with the version of istio required to install
 ``` 
-docker build --build-arg ISTIO_VERSION=1.27.1 -t istio-deployer:latest 
+docker build --build-arg ISTIO_VERSION=1.28.0 -t istio-deployer:latest 
 ```
 
 - Create IstioOperator CR with your configuration and wrap it into config map. The result should be placed to '.\helm-templates\istio-deployer\templates' folder
