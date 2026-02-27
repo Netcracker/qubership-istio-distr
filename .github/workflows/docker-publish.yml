@@ -74,7 +74,7 @@ jobs:
           sed -i "s#^[[:space:]]*qubership_istio_deployer_image.*#qubership_istio_deployer_image: ${ISTIO_DEPLOYER_IMAGE}#g" "./helm-templates/istio-deployer/values.yaml"
 
       - name: Upload changes
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: images_files
           path: |
