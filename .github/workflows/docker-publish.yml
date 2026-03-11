@@ -30,7 +30,7 @@ on:
 
 env:
   TAG_NAME: ${{ github.event.release.tag_name || github.ref }}
-  GITHUB_GROUP: ${{ toLower(github.repository_owner) }}
+  GITHUB_GROUP: ${{ github.repository_owner }}
 
 concurrency:
   # On main/release, we don't want any jobs cancelled so the sha is used to name the group
@@ -71,7 +71,7 @@ jobs:
           else
             TAG_CLEANED=${TAG_NAME}
           fi
-          ISTIO_DEPLOYER_IMAGE="ghcr.io/${GITHUB_GROUP}/qubership-istio-deployer:${ISTIO_MINOR_VERSION}-latest"
+          ISTIO_DEPLOYER_IMAGE="ghcr.io/${GITHUB_GROUP,,}/qubership-istio-deployer:${ISTIO_MINOR_VERSION}-latest"
           sed -i "s#^[[:space:]]*qubership_istio_deployer_image.*#qubership_istio_deployer_image: ${ISTIO_DEPLOYER_IMAGE}#g" "./helm-templates/istio-deployer/values.yaml"
 
       - name: Upload changes
@@ -101,7 +101,7 @@ jobs:
       - name: Prepare Tag
         run: echo "TAG_NAME=$(echo ${TAG_NAME} | sed 's@refs/tags/@@;s@refs/heads/@@;s@/@_@g')" >> $GITHUB_ENV
       - name: Prepare Group
-        run: echo "GITHUB_GROUP=${GITHUB_GROUP}" >> $GITHUB_ENV
+        run: echo "GITHUB_GROUP=${GITHUB_GROUP,,}" >> $GITHUB_ENV
       - name: Get package IDs for delete
         id: get-ids-for-delete
         uses: Netcracker/get-package-ids@v0.0.1
