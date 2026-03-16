@@ -1,4 +1,5 @@
 global:
+  profile: ambient
     # Default hub for Istio images.
     # hub: docker.io/istio
 
@@ -18,8 +19,6 @@ base: {}
 # cni — CNI plugin DaemonSet
 # ---------------------------------------------------------------------------
 cni:
-  profile: ambient
-
   # Default hub for Istio images.
   # hub: docker.io/istio
 
@@ -45,8 +44,6 @@ cni:
 # istiod — control plane (Pilot / istiod)
 # ---------------------------------------------------------------------------
 istiod:
-  profile: ambient
-
   # Default hub for Istio images.
   # hub: docker.io/istio
 
