@@ -104,7 +104,7 @@ jobs:
               "dockerfile": "./Dockerfile",
               "build_context": "."
             }]
-          checkout: false
+          checkout: true
           download-artifact: true
           download-artifact-name: helm-templates
           platforms: linux/amd64,linux/arm64
