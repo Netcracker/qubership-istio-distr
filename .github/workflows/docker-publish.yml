@@ -132,14 +132,29 @@ jobs:
             --namespace istio-system \
             --create-namespace \
             --timeout 3m \
-            --wait
+            --wait \
             --set meshConfig.accessLogFile=/dev/stdout
 
       - name: Verify rollout
         run: |
+          echo "::group::istiod deployment"
           kubectl rollout status deployment/istiod -n istio-system --timeout=120s
+          kubectl get deployment istiod -n istio-system -o wide
+          echo "::endgroup::"
+
+          echo "::group::istio-cni-node daemonset"
           kubectl rollout status daemonset/istio-cni-node -n istio-system --timeout=120s
+          kubectl get daemonset istio-cni-node -n istio-system -o wide
+          echo "::endgroup::"
+
+          echo "::group::ztunnel daemonset"
           kubectl rollout status daemonset/ztunnel -n istio-system --timeout=120s
+          kubectl get daemonset ztunnel -n istio-system -o wide
+          echo "::endgroup::"
+
+          echo "::group::all pods"
+          kubectl get pods -n istio-system -o wide
+          echo "::endgroup::"
 
       - name: Dump state on failure
         if: failure()
