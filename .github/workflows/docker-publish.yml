@@ -112,7 +112,7 @@ jobs:
       # The transfer image is FROM scratch — no shell, so we use docker create + docker cp
       - name: Extract helm-templates from transfer image
         run: |
-          CID=$(docker create qubership-istio-transfer:test)
+          CID=$(docker create --entrypoint="" qubership-istio-transfer:test /bin/sh)
           docker cp ${CID}:/helm-templates ./helm-templates-extracted
           docker rm ${CID}
 
