@@ -89,8 +89,79 @@ jobs:
           name: helm-templates
           path: ./helm-templates
 
-  multiplatform_build:
+  integration-test:
     needs: [ helm-charts-build ]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Download helm-templates artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: helm-templates
+          path: ./helm-templates
+
+      - name: Build transfer image locally (linux/amd64)
+        run: |
+          docker build \
+            --platform linux/amd64 \
+            -t qubership-istio-transfer:test \
+            -f Dockerfile .
+
+      # The transfer image is FROM scratch — no shell, so we use docker create + docker cp
+      - name: Extract helm-templates from transfer image
+        run: |
+          CID=$(docker create qubership-istio-transfer:test)
+          docker cp ${CID}:/helm-templates ./helm-templates-extracted
+          docker rm ${CID}
+
+      - name: Install Helm 4
+        uses: azure/setup-helm@v4
+        with:
+          version: v4.0.1
+
+      - name: Create kind cluster
+        uses: helm/kind-action@v1
+        with:
+          cluster_name: istio-test
+
+      - name: Helm install qubership-istio
+        run: |
+          helm install qubership-istio ./helm-templates-extracted/qubership-istio \
+            --namespace istio-system \
+            --create-namespace \
+            --timeout 3m \
+            --wait
+            --set meshConfig.accessLogFile=/dev/stdout
+
+      - name: Verify rollout
+        run: |
+          kubectl rollout status deployment/istiod -n istio-system --timeout=120s
+          kubectl rollout status daemonset/istio-cni-node -n istio-system --timeout=120s
+          kubectl rollout status daemonset/ztunnel -n istio-system --timeout=120s
+
+      - name: Dump state on failure
+        if: failure()
+        run: |
+          mkdir -p /tmp/istio-debug
+          kubectl get all -n istio-system                                 > /tmp/istio-debug/resources.txt      2>&1
+          kubectl describe pods -n istio-system                           > /tmp/istio-debug/pods-describe.txt  2>&1
+          kubectl get events -n istio-system --sort-by='.lastTimestamp'   > /tmp/istio-debug/events.txt         2>&1
+          kubectl logs -n istio-system -l app=istiod --tail=200           > /tmp/istio-debug/istiod-logs.txt    2>&1 || true
+          kubectl logs -n istio-system -l k8s-app=istio-cni-node --tail=200 > /tmp/istio-debug/cni-logs.txt    2>&1 || true
+          kubectl logs -n istio-system -l app=ztunnel --tail=200          > /tmp/istio-debug/ztunnel-logs.txt   2>&1 || true
+
+      - name: Upload debug bundle
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: istio-debug-${{ github.run_id }}
+          path: /tmp/istio-debug/
+          retention-days: 7
+
+  multiplatform_build:
+    needs: [ helm-charts-build, integration-test ]
     runs-on: ubuntu-latest
     steps:
       - name: Prepare Tag
@@ -113,3 +184,4 @@ jobs:
           dry-run: ${{ github.event.pull_request.user.login == 'renovate[bot]' ||  github.event_name == 'push' }} 
         env:
            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
