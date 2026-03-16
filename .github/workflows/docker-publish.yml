@@ -30,7 +30,6 @@ on:
 
 env:
   TAG_NAME: ${{ github.event.release.tag_name || github.ref }}
-  GITHUB_GROUP: ${{ github.repository_owner }}
 
 concurrency:
   # On main/release, we don't want any jobs cancelled so the sha is used to name the group
@@ -40,91 +39,76 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  load-configuration:
+
+  helm-charts-build:
     runs-on: ubuntu-latest
     outputs:
-      istio-version: ${{ steps.load_configuration.outputs.istio-version }}
-      istio-minor-version: ${{ steps.load_configuration.outputs.istio-minor-version }}
+      istio-minor-version: ${{ steps.version.outputs.istio-minor-version }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
-      - name: Load configuration
-        id: load_configuration
+
+      - name: Read Istio version from Chart.yaml
+        id: version
         run: |
-          ISTIO_VERSION="$(grep "ISTIO_VERSION" $GITHUB_WORKSPACE/.github/configuration.yml | awk -F': ' '{print $2}')"
-          ISTIO_MINOR_VERSION="$(echo "${ISTIO_VERSION%.*}")"
-          echo istio-version=${ISTIO_VERSION}
-          
-          echo istio-version="${ISTIO_VERSION}" >> "$GITHUB_OUTPUT"  
-          echo istio-minor-version="${ISTIO_MINOR_VERSION}" >> "$GITHUB_OUTPUT" 
- 
-          # Get images
-          curl -L https://istio.io/downloadIstio | ISTIO_VERSION=${ISTIO_VERSION} TARGET_ARCH=amd64 sh - 
-          ln -sf $(pwd)/istio-*/bin/istioctl /usr/local/bin/istioctl 
-          istioctl manifest generate --set profile=ambient | grep 'image: docker' > images.yaml
+          ISTIO_VERSION="$(yq e '.dependencies[0].version' helm-templates/qubership-istio/Chart.yaml)"
+          echo "istio-minor-version=${ISTIO_VERSION%.*}" >> "$GITHUB_OUTPUT"
 
-          awk '/image:/ { sub(/:/, ": "); split($0, parts, /[:/ ]+/); name = parts[length(parts)-1]; sub("-","_", name); init=$0; sub(/^[ \t]+/, "", init); print name "_" init }' images.yaml > images.yaml.tmp 
-          cat images.yaml.tmp >> ./helm-templates/istio-deployer/images.yaml
-          # Set version
-          if echo ${TAG_NAME} | grep ref; then
-            TAG_CLEANED=$(echo ${TAG_NAME} | sed 's@refs/tags/@@;s@refs/heads/@@;s@/@_@g')
-          else
-            TAG_CLEANED=${TAG_NAME}
-          fi
-          ISTIO_DEPLOYER_IMAGE="ghcr.io/${GITHUB_GROUP,,}/qubership-istio-deployer:${ISTIO_MINOR_VERSION}-latest"
-          sed -i "s#^[[:space:]]*qubership_istio_deployer_image.*#qubership_istio_deployer_image: ${ISTIO_DEPLOYER_IMAGE}#g" "./helm-templates/istio-deployer/values.yaml"
+      - name: Install Helm 4
+        uses: azure/setup-helm@v4
+        with:
+          version: v4.0.1
 
-      - name: Upload changes
+      - name: Build qubership-istio chart dependencies
+        run: helm dependency build helm-templates/qubership-istio
+
+      - name: Extract images from rendered Helm templates
+        run: |
+          helm template istio helm-templates/qubership-istio > /tmp/rendered.yaml
+
+          # Extract images from known workload resources by exact kind/name/path using yq.
+          # Each document is selected by kind+metadata.name; image is at a deterministic path.
+          CNI_IMAGE=$(yq e 'select(.kind == "DaemonSet" and .metadata.name == "istio-cni-node")
+            | .spec.template.spec.containers[0].image' /tmp/rendered.yaml)
+
+          ISTIOD_IMAGE=$(yq e 'select(.kind == "Deployment" and .metadata.name == "istiod")
+            | .spec.template.spec.containers[0].image' /tmp/rendered.yaml)
+
+          ZTUNNEL_IMAGE=$(yq e 'select(.kind == "DaemonSet" and .metadata.name == "ztunnel")
+            | .spec.template.spec.containers[0].image' /tmp/rendered.yaml)
+
+          cat > ./helm-templates/qubership-istio/effective-images.yaml <<EOF
+          install_cni_image: ${CNI_IMAGE}
+          pilot_image: ${ISTIOD_IMAGE}
+          ztunnel_image: ${ZTUNNEL_IMAGE}
+          EOF
+
+      - name: Upload helm-templates artifact
         uses: actions/upload-artifact@v4
         with:
-          name: images_files
-          path: |
-            ./helm-templates/istio-deployer/values.yaml
-            ./helm-templates/istio-deployer/images.yaml
+          name: helm-templates
+          path: ./helm-templates
 
   multiplatform_build:
-    needs: [ load-configuration ]
-    strategy:
-      fail-fast: false
-      matrix:
-        component:
-          - name: qubership-istio-transfer
-            file: docker-transfer/Dockerfile
-            context: .
-          - name: qubership-istio-deployer
-            file: ./Dockerfile
-            context: .
+    needs: [ helm-charts-build ]
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v6
       - name: Prepare Tag
         run: echo "TAG_NAME=$(echo ${TAG_NAME} | sed 's@refs/tags/@@;s@refs/heads/@@;s@/@_@g')" >> $GITHUB_ENV
-      - name: Prepare Group
-        run: echo "GITHUB_GROUP=${GITHUB_GROUP,,}" >> $GITHUB_ENV
-      - name: Get package IDs for delete
-        id: get-ids-for-delete
-        uses: Netcracker/get-package-ids@v0.0.1
-        with:
-          component-name: ${{ matrix.component.name }}
-          component-tag: ${{ env.TAG_NAME }}
-          access-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Build and push
         uses: netcracker/qubership-workflow-hub/actions/docker-action@main
         with:
           component: |
             [{
-              "name": "${{ matrix.component.name }}", 
-              "file": "${{ matrix.component.file }}",
-              "context": "${{ matrix.component.context }}"
+              "name": "qubership-istio-transfer", 
+              "dockerfile": "./Dockerfile",
+              "build_context": "."
             }]
           checkout: false
           download-artifact: true
-          download-artifact-name: images_files
-          download-artifact-path: ./helm-templates/istio-deployer/
-          download-artifact-merge-multiple: true  
+          download-artifact-name: helm-templates
           platforms: linux/amd64,linux/arm64
-          tags: "${{ needs.load-configuration.outputs.istio-minor-version }}-${{ env.TAG_NAME }},${{ needs.load-configuration.outputs.istio-minor-version }}-latest"
+          tags: "${{ needs.helm-charts-build.outputs.istio-minor-version }}-${{ env.TAG_NAME }},${{ needs.helm-charts-build.outputs.istio-minor-version }}-latest"
           registry: ghcr.io
           dry-run: ${{ github.event.pull_request.user.login == 'renovate[bot]' ||  github.event_name == 'push' }} 
         env:

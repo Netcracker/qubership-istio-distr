@@ -1,0 +1,22 @@
+qubership-istio chart has been deployed.
+
+The following Istio components are included in this release:
+
+  - base    — cluster-scoped CRDs and base resources
+  - cni     — CNI plugin DaemonSet (ambient mode)
+  - istiod  — control plane (istiod / Pilot)
+  - ztunnel — ztunnel DaemonSet (ambient mode L4 proxy)
+
+To verify the installation:
+
+  kubectl get pods -n istio-system
+  kubectl get daemonset -n istio-system
+
+To override values for a specific sub-chart, prefix the key with the
+sub-chart name in your values file. For example:
+
+  istiod:
+    resources:
+      requests:
+        cpu: 500m
+        memory: 512Mi

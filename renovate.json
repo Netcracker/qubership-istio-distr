@@ -4,43 +4,17 @@
   "assigneesFromCodeOwners": true,
   "reviewersFromCodeOwners": true,
 
-  "customManagers": [
-    {
-      "customType": "regex",
-      "description": "Update ISTIO_VERSION in Dockerfiles",
-      "fileMatch": ["^Dockerfile$"],
-      "matchStrings": [
-        "# renovate: datasource=github-releases depName=istio/istio\\sARG ISTIO_VERSION=(?<currentValue>.+?)\\s"
-      ],
-      "datasourceTemplate": "github-releases",
-      "depNameTemplate": "istio/istio",
-      "versioningTemplate": "semver"
-    },
-    {
-      "customType": "regex",
-      "description": "Update ISTIO_VERSION in configuration.yaml",
-      "fileMatch": ["^\\.github/configuration\\.yml$"],
-      "matchStrings": [
-        "ISTIO_VERSION:\\s(?<currentValue>.+)"
-      ],
-      "datasourceTemplate": "github-releases",
-      "depNameTemplate": "istio/istio",
-      "versioningTemplate": "semver"
-    }
-  ],
+  "helmv3": {
+    "fileMatch": ["helm-templates/qubership-istio/Chart\\.yaml$"]
+  },
 
   "packageRules": [
     {
-      "matchDatasources": ["github-releases"],
-      "matchPackageNames": ["istio/istio"],
-      "allowedVersions": "/^\\d+\\.\\d+\\.\\d+$/",
+      "matchDatasources": ["helm"],
+      "matchPackageNames": ["base", "cni", "istiod", "ztunnel"],
+      "groupName": "istio chart updates",
       "automerge": false,
-      "groupName": "istio minor/patch updates"
-    },
-    {
-      "matchPackagePatterns": ["ghcr.io/netcracker/qubership-core-base"],
-      "groupName": "Base image updates",
-      "rangeStrategy": "bump"
+      "allowedVersions": "/^\\d+\\.\\d+\\.\\d+$/"
     }
   ]
 }
