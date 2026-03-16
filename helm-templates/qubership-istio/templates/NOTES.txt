@@ -3,9 +3,9 @@ qubership-istio chart has been deployed.
 The following Istio components are included in this release:
 
   - base    — cluster-scoped CRDs and base resources
-  - cni     — CNI plugin DaemonSet (ambient mode)
-  - istiod  — control plane (istiod / Pilot)
-  - ztunnel — ztunnel DaemonSet (ambient mode L4 proxy)
+  - cni     — CNI plugin DaemonSet
+  - istiod  — control plane
+  - ztunnel — ztunnel DaemonSet
 
 To verify the installation:
 
