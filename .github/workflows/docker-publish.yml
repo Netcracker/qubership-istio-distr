@@ -193,7 +193,7 @@ jobs:
           checkout: true
           download-artifact: true
           download-artifact-name: helm-templates
-          download-artifact-path: ./helm-templates/qubership-istio1
+          download-artifact-path: ./helm-templates/qubership-istio
           download-artifact-merge-multiple: true
           platforms: linux/amd64,linux/arm64
           tags: "${{ needs.helm-charts-build.outputs.istio-minor-version }}-${{ env.TAG_NAME }},${{ needs.helm-charts-build.outputs.istio-minor-version }}-latest"
