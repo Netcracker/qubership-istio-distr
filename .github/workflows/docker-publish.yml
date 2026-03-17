@@ -87,7 +87,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: helm-templates
-          path: ./helm-templates
+          path: ./helm-templates/qubership-istio
 
   integration-test:
     needs: [ helm-charts-build ]
@@ -100,7 +100,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: helm-templates
-          path: ./helm-templates
+          path: ./helm-templates/qubership-istio
 
       - name: Build transfer image locally (linux/amd64)
         run: |
@@ -193,7 +193,7 @@ jobs:
           checkout: true
           download-artifact: true
           download-artifact-name: helm-templates
-          download-artifact-path: ./helm-templates/
+          download-artifact-path: ./helm-templates/qubership-istio/
           download-artifact-merge-multiple: true
           platforms: linux/amd64,linux/arm64
           tags: "${{ needs.helm-charts-build.outputs.istio-minor-version }}-${{ env.TAG_NAME }},${{ needs.helm-charts-build.outputs.istio-minor-version }}-latest"
