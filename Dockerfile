@@ -1,5 +1,5 @@
 # renovate: datasource=docker depName=ghcr.io/netcracker/qubership-core-base
-FROM ghcr.io/netcracker/qubership-core-base:2.2.4
+FROM ghcr.io/netcracker/qubership-core-base:2.2.6
 
 USER root
 WORKDIR /workspace
