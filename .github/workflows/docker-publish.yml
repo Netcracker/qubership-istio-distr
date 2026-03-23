@@ -128,13 +128,13 @@ jobs:
 
       - name: Helm install qubership-istio
         run: |
-          helm install qubership-istio ./helm-templates-extracted/qubership-istio \
+          helm upgrade --install qubership-istio ./helm-templates-extracted/qubership-istio \
             --namespace istio-system \
             --create-namespace \
             --timeout 3m \
             --wait \
-            --set meshConfig.accessLogFile=/dev/stdout
-
+            --force-conflicts
+            
       - name: Verify rollout
         run: |
           echo "::group::istiod deployment"

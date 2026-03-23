@@ -1,14 +1,18 @@
 global:
   profile: ambient
-    # Default hub for Istio images.
-    # hub: docker.io/istio
+  
+  # namespace where istio will be installed
+  istioNamespace: istio-system
 
-    # Default tag for Istio images.
-    # tag: <tag>
+  # Default hub for Istio images.
+  # hub: docker.io/istio
 
-    # Variant of the image to use.
-    # Currently supported are: [debug, distroless]
-    # variant: ""
+  # Default tag for Istio images.
+  # tag: <tag>
+
+  # Variant of the image to use.
+  # Currently supported are: [debug, distroless]
+  # variant: ""
 
 # ---------------------------------------------------------------------------
 # istio-base — CRDs and cluster-scoped resources
@@ -56,6 +60,15 @@ istiod:
   # Variant of the image to use.
   # Currently supported are: [debug, distroless]
   # variant: ""
+
+  meshConfig:
+    accessLogFile: "/dev/stdout"
+
+  gatewayClasses:
+    istio:
+      service:
+        spec:
+          type: ClusterIP
 
   resources:
     requests:
