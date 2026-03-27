@@ -1,0 +1,19 @@
+apiVersion: v2
+name: qubership-istio
+description: A Helm chart that assembles all Istio component charts (base, cni, istiod, ztunnel)
+type: application
+# The effective version will be computed during Helm generation
+version: 0.0.1
+dependencies:
+  - name: base
+    version: "1.28.0"
+    repository: "https://istio-release.storage.googleapis.com/charts"
+  - name: cni
+    version: "1.28.0"
+    repository: "https://istio-release.storage.googleapis.com/charts"
+  - name: istiod
+    version: "1.28.0"
+    repository: "https://istio-release.storage.googleapis.com/charts"
+  - name: ztunnel
+    version: "1.28.0"
+    repository: "https://istio-release.storage.googleapis.com/charts"
