@@ -55,7 +55,7 @@ jobs:
           echo "istio-minor-version=${ISTIO_VERSION%.*}" >> "$GITHUB_OUTPUT"
 
       - name: Install Helm 4
-        uses: azure/setup-helm@v4
+        uses: azure/setup-helm@v5
         with:
           version: v4.0.1
 
@@ -117,7 +117,7 @@ jobs:
           docker rm ${CID}
 
       - name: Install Helm 4
-        uses: azure/setup-helm@v4
+        uses: azure/setup-helm@v5
         with:
           version: v4.0.1
 
