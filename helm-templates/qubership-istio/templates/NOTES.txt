@@ -1,0 +1,32 @@
+qubership-istio chart has been deployed.
+
+The following Istio components are included in this release:
+
+  - base    — cluster-scoped CRDs and base resources
+  - cni     — CNI plugin DaemonSet
+  - istiod  — control plane
+  - ztunnel — ztunnel DaemonSet
+
+To verify the installation:
+
+  kubectl get pods -n {{ .Release.Namespace }}
+  kubectl get daemonset -n {{ .Release.Namespace }}
+
+Upgrading:
+
+  istiod takes runtime ownership of ValidatingWebhookConfiguration fields
+  (.failurePolicy) via server-side apply. Helm 4 SSA will report a conflict
+  on the second and subsequent upgrades. Use --force-conflicts to resolve:
+
+  helm upgrade qubership-istio <chart> \
+    --namespace {{ .Release.Namespace }} \
+    --force-conflicts
+
+To override values for a specific sub-chart, prefix the key with the
+sub-chart name in your values file. For example:
+
+  istiod:
+    resources:
+      requests:
+        cpu: 500m
+        memory: 512Mi

@@ -1,132 +1,398 @@
 [//]: ![logo](img/logo.png)
 
-# Istio Deployer Overview
-This repository contains an approach to installing istio in the clouds with restrictions on downloading installation resources and loading Docker images. Customization is carried out using basic istio tools and IstioOperator CR.
+# Istio Ambient Mesh Hardware Sizing Model
 
-### Usage of istio-operator.yaml
-1. Purpose
-Declarative configuration: You can specify your desired Istio setup in YAML, can enable/disable components, set resource limits, customize ingress gateways, meshConfig, etc.
-Repeatability: Easily recreate identical environments by applying the same CR.
+## 1. Input Parameters
 
-2. Sample istio-operator.yaml with explanations (we use template for automation)
+### Cluster
+- envs
+- replicas
+- nodeCount
+- microservicesPerEnv
+- totalThroughputGbps
+- configObjectCount
+- churnFactor
+
+### Workload Behavior
+- connectionsPerPod
+- l7TrafficRatio
+
+---
+
+## 2. Derived Values
+
+### Total pods
 ```
-apiVersion: install.istio.io/v1alpha1
-kind: IstioOperator
-metadata:
-  name: my-istio
-  namespace: istio-system
-spec:
-  profile: ambient
-  meshConfig:
-    defaultConfig:
-      proxyMetadata:
-        ISTIO_META_DNS_CAPTURE: "true"  # Enable DNS capture
-  components:
-    ingressGateways:
-      - name: istio-ingressgateway
-        enabled: true
-        k8s:
-          service:
-            type: LoadBalancer  # Expose via LoadBalancer
-    pilot:
-      enabled: true # Install and enable Istio control-plane
-    cni:
-      enabled: true  # Install and enable Istio CNI plugin
-```
-How to customize:
-- Enabling/disabling components: Set enabled: true/false for components like istioCni, pilot, egressGateways, etc.
-- Configuring gateways: Customize ports, types, and hosts.
-- Mesh settings: Use meshConfig to set global parameters.
-- Resource limits: Use values to specify CPU/memory requests/limits.
-
-
-### local developmnet
-
-- Build docker image with the version of istio required to install
-``` 
-docker build --build-arg ISTIO_VERSION=1.28.0 -t istio-deployer:latest 
+totalPods = microservicesPerEnv * replicas * envs
 ```
 
-- Create IstioOperator CR with your configuration and wrap it into config map. The result should be placed to '.\helm-templates\istio-deployer\templates' folder
-
-- Login to kubernetes cluster 
-
-- Deploy the result to cluster
+### Connections per node
 ```
-helm install istio-deployer ./helm-templates/istio-deployer
+connectionsPerNode = (connectionsPerPod * totalPods) / nodeCount  
 ```
+- Each pod maintains N connections
+- Connections are evenly distributed across nodes
 
+---
 
-You can validate helm sources before deployment with command
+### Throughput per node
 ```
-helm template render .\helm-templates\istio-deployer\ --values .\helm-templates\istio-deployer\values.yaml > install.yaml
+throughputPerNodeGbps = totalThroughputGbps / nodeCount  
 ```
-And apply processed file (install.yml) instead of helm install usage
+- Assumes even traffic distribution across worker nodes
 
-The kubernetes job will run istio deployment in case of valid profile used 
+---
 
-docker run --rm -v $HOME\.kube:/root/.kube -v .\:/config istio-deployer:latest /bin/bash -c " istioctl install -y -f config/install.yaml"
+## 3. ztunnel Sizing (L4 Data Plane)
 
-### Prerequisites
-For deploying Istio Ambient Mode, the service account requires specific permissions to operate correctly, especially because Ambient Mode runs as a sidecar-less, data-plane-only mode that relies on a control plane component to handle proxy injection and configuration.
-
-Permissions for Istio Ambient Mode
-In general, the service account used by Istio Ambient Mode needs permissions to:
- - Manage and watch resources like Pods, Namespaces, ServiceAccounts, and ConfigMaps.
- - Access custom resources related to Istio, such as WorkloadEntry, WorkloadGroup, ProxyConfig, etc.
- - Create, update, delete, and list resources required for configuration and operation.
-
-
-Here's an example of a ClusterRole with the necessary permissions for Ambient Mode, extend it if your custom profile requires more rights:
-
+### CPU per node
 ```
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: istio-ambient
-rules:
-  - apiGroups:
-      - ""
-    resources:
-      - pods
-      - namespaces
-      - serviceaccounts
-      - configmaps
-    verbs:
-      - get
-      - list
-      - watch
-  - apiGroups:
-      - networking.istio.io
-    resources:
-      - workloadentries
-      - workloadgroups
-      - proxyconfigs
-    verbs:
-      - get
-      - list
-      - watch
-  - apiGroups:
-      - discovery.k8s.io
-    resources:
-      - endpointslices
-    verbs:
-      - get
-      - list
-      - watch
-  - apiGroups:
-      - security.istio.io
-    resources:
-      - authorizationpolicies
-      - peerauthentications
-    verbs:
-      - get
-      - list
-      - watch
-  - apiGroups:
-      - config.istio.io
-    resources:
-      - meshconfig
-    verbs:
-      - get
+ztunnelCpuPerNode = MAX(  
+ connectionsPerNode / 2000,  
+ throughputPerNodeGbps * 0.8  
+)
 ```
+- connectionsPerNode / 2000  
+  → empirical: ~1 vCPU handles ~2000 active L4 connections  
+- throughputPerNodeGbps * 0.8  
+  → network-bound cost (~0.8 vCPU per Gbps with mTLS)  
+- MAX()  
+  → ztunnel is constrained by whichever is higher: connections or throughput  
+
+---
+
+### Memory per node
+```
+ztunnelMemPerNodeMB = 150 + (connectionsPerNode * 0.05)
+```
+- 150 MB base → idle ztunnel footprint  
+- 0.05 MB per connection → connection tracking + buffers  
+
+---
+
+### Totals
+```
+ztunnelCpuTotal = ztunnelCpuPerNode * nodeCount  
+ztunnelMemTotalMB = ztunnelMemPerNodeMB * nodeCount  
+```
+- ztunnel runs once per node (DaemonSet model)
+
+---
+
+## 4. Waypoint Proxy Sizing (L7)
+
+### L7 throughput
+```
+l7ThroughputGbps = totalThroughputGbps * l7TrafficRatio  
+```
+- Only a fraction of traffic is processed at L7  
+- Typical baseline: 20–40%
+
+---
+
+### CPU
+```
+waypointCpuTotal = l7ThroughputGbps * 3  
+```
+- L7 processing (HTTP, routing, auth) is expensive  
+- Empirical: ~2–4 vCPU per Gbps  
+- Using 3 vCPU/Gbps as midpoint baseline  
+
+---
+
+### Memory
+```
+waypointMemTotalMB = 300 + (l7ThroughputGbps * 1000 * 0.2)
+```
+- 300 MB base → Envoy footprint  
+- Traffic term reflects buffering, routing tables, telemetry  
+- 0.2 MB per unit traffic → heuristic from Envoy scaling patterns  
+
+---
+
+## 5. Control Plane Sizing (istiod)
+
+### CPU
+```
+istiodCpuTotal = (totalPods / 1500) * churnFactor  
+```
+- ~1500 pods per vCPU baseline  
+- churnFactor accounts for:
+  - config updates
+  - deployments
+  - endpoint changes  
+- Higher churn → more recomputation (xDS pushes)
+
+---
+
+### Memory
+```
+istiodMemTotalMB =  
+ (totalPods * 1.5) + (configObjectCount * 0.5)
+```
+- 1.5 MB per pod → endpoint + metadata storage  
+- 0.5 MB per config object → routing rules, policies  
+
+---
+
+## 6. CNI Sizing Recommendation
+
+Final Recommendation (Based on General Consensus and Benchmarks)
+
+### CPU
+```
+cniCpuTotal = 0.4 
+```
+- (value by default) Negligible. Typically, the CNI doesn't consume much CPU directly unless network policies are complex or there’s a significant amount of pod-to-pod traffic with encryption.
+
+### Memory
+```
+cniMemTotalMB =  nodeCount * 100
+```
+- ~100 MB per node. This accounts for network management, routing, and metadata tracking that the CNI handles.
+
+These figures are based on typical Kubernetes and Istio ambient mesh deployments where the network policies aren't overly complex and where the traffic is balanced. In most Istio deployments, the CNI's role is minimal compared to the load generated by the proxy (like ztunnel) and control plane (istiod), unless there's a heavy reliance on network policies.
+
+---
+
+**Note:**
+According to Kubernetes documentation and CNI provider scaling guides, CNI can handle around 500 pods per vCPU under moderate load. This is based on Kubernetes and CNI providers like Calico, Cilium, and Flannel, where CPU utilization scales linearly with the number of pods. However, this calculation isn't used in your case due to the specific assumptions for Istio Ambient Mesh.
+
+## 7. Aggregate Requirements
+
+### Total CPU
+```
+totalCpu =  
+ ztunnelCpuTotal + waypointCpuTotal + istiodCpuTotal + cniCpuTotal
+```
+---
+
+### Total Memory
+```
+totalMemoryMB =  
+ ztunnelMemTotalMB + waypointMemTotalMB + istiodMemTotalMB + cniMemTotalMB
+```
+---
+
+## 8. Interpretation Guidelines
+
+### When ztunnel dominates
+- High throughput (Gbps)
+- Moderate pod count
+- Example: production traffic-heavy systems  
+
+---
+
+### When istiod dominates
+- High pod count
+- Many config objects
+- High churn (CI/CD, ephemeral workloads)  
+
+---
+
+### When waypoints dominate
+- High percentage of L7 traffic
+- Heavy use of:
+  - routing rules
+  - auth policies
+  - observability  
+
+---
+
+## 9. Key Assumptions Summary
+
+| Component | Scaling Driver | Rule of Thumb |
+|----------|--------------|--------------|
+| ztunnel CPU | Connections / Throughput | max(conn/2000, 0.8 CPU/Gbps) |
+| ztunnel Memory | Connections | 150 MB + 0.05 MB/conn |
+| waypoint CPU | L7 throughput | ~3 CPU/Gbps |
+| waypoint Memory | Traffic | ~300 MB + l7ThroughputGbps * 1000 * 0.2 |
+| istiod CPU | Pods + churn | pods/1500 * churn |
+| istiod Memory | Pods + config | linear scaling |
+
+---
+
+## 10. Notes
+
+- This is a **baseline model**, not a guarantee  
+- Real-world variance depends on:
+  - protocol mix (HTTP vs gRPC vs TCP)
+  - TLS settings
+  - telemetry volume
+- Always validate with load testing
+- Recommended safety margin: **+30–50%**
+
+## 11. Istio Ambient Mesh Examples - Prod and Dev Profiles
+
+### 1. Prod Profile
+
+#### Inputs
+- **envs** = 1
+- **nodeCount** = 10  
+- **microservicesPerEnv** = 400  
+- **replicas** = 2 
+- **totalThroughputGbps** = 10  
+- **connectionsPerPod** = 20  
+- **configObjectCount** = 3200  
+- **churnFactor** = 2  
+- **l7TrafficRatio** = 0.3  
+
+#### Derived Values
+totalPods = **800**  
+connectionsPerNode = (20 * 800) / 10 = **1600**  
+throughputPerNodeGbps = 10 / 10 = **1 Gbps**  
+
+---
+
+### ztunnel Sizing
+
+#### CPU per node
+ztunnelCpuPerNode = MAX(1600 / 2000, 1 * 0.8)  
+= MAX(0.8, 0.8) = **0.8 vCPU**
+
+#### Memory per node
+ztunnelMemPerNodeMB = 150 + (1600 * 0.05)  
+= 150 + 80 = **230 MB**
+
+#### Totals
+- **ztunnelCpuTotal** = 0.8 * 10 = **8 vCPU**
+- **ztunnelMemTotal** = 230 * 10 = **2300 MB (~2.3 GB)**
+
+---
+
+### Waypoint Sizing (L7)
+
+#### L7 throughput
+l7ThroughputGbps = 10 * 0.3 = **3 Gbps**  
+
+#### CPU
+waypointCpuTotal = 3 * 3 = **9 vCPU**
+
+#### Memory
+waypointMemTotalMB = 300 + (3 * 1000 * 0.2)  
+= 300 + 600 = **900 MB**
+
+---
+
+### Control Plane (istiod)
+
+#### CPU
+istiodCpuTotal = (800 / 1500) * 2 ≈ **1.07 vCPU**
+
+#### Memory
+istiodMemTotalMB = (800 * 1.5) + (3200 * 0.5)  
+= 1200 + 1600 = **2800 MB (~2.8 GB)**
+
+---
+
+###  CNI Sizing
+
+#### CPU
+cniCpuTotal = **0.4 vCPU**
+
+#### Memory
+cniMemTotalMB = (100 * 10) = **1000 MB (1 GB)**
+
+---
+### Prod Profile TOTAL
+
+#### CPU
+- **Total CPU** = 8 + 9 + 1.07 + 0.4 = **18.5 vCPU**
+
+#### Memory
+- **Total Memory** = 2300 MB + 900 MB + 2800 MB + 1000 MB = **7000 MB (~7.0 GB)**
+
+---
+
+### 2. Dev Profile
+
+#### Inputs
+- **envs** = 10
+- **nodeCount** = 10  
+- **microservicesPerEnv** = 300  
+- **replicas** = 1
+- **totalThroughputGbps** = 1  
+- **connectionsPerPod** = 5  
+- **configObjectCount** = 1200  
+- **churnFactor** = 2  
+- **l7TrafficRatio** = 0.3  
+
+#### Derived Values
+totalPods = **3000**
+connectionsPerNode = (5 * 3000) / 10 = **1500**
+throughputPerNodeGbps = 1 / 10 = **0.1 Gbps**
+
+---
+
+### ztunnel Sizing
+
+#### CPU per node
+ztunnelCpuPerNode = MAX(1500 / 2000, 0.1 * 0.8)  
+= MAX(0.75, 0.08) = **0.75 vCPU**
+
+#### Memory per node
+ztunnelMemPerNodeMB = 150 + (1500 * 0.05)  
+= 150 + 75 = **225 MB**
+
+#### Totals
+- **ztunnelCpuTotal** = 0.75 * 10 = **7.5 vCPU**
+- **ztunnelMemTotal** = 225 * 10 = **2250 MB (~2.25 GB)**
+
+---
+
+### Waypoint Sizing (L7)
+
+#### L7 throughput
+l7ThroughputGbps = 1 * 0.3 = **0.3 Gbps**
+
+#### CPU
+waypointCpuTotal = 0.3 * 3 = **0.9 vCPU**
+
+#### Memory
+waypointMemTotalMB = 300 + (0.3 * 1000 * 0.2)  
+= 300 + 60 = **360 MB**
+
+---
+
+###  Control Plane (istiod)
+
+#### CPU
+istiodCpuTotal = (3000 / 1500) * 2 = **4 vCPU**
+
+#### Memory
+istiodMemTotalMB = (3000 * 1.5) + (1200 * 0.5)  
+= 4500 + 600 = **5100 MB (~5.1 GB)**
+
+---
+
+###  CNI Sizing
+
+#### CPU
+cniCpuTotal = **0.4 vCPU**
+
+#### Memory
+cniMemTotalMB = (100 * 10) = **1000 MB (1 GB)**
+
+---
+
+#### Dev Profile TOTAL
+
+#### CPU
+- **Total CPU** = 7.5 + 0.9 + 4 + 0.4 = **12.8 vCPU**
+
+#### Memory
+- **Total Memory** = 2250 MB + 360 MB + 5100 MB + 1000 MB = **8710 MB (~8.7 GB)**
+
+---
+
+#### Final Summary
+
+| Component  | Prod CPU | Dev CPU | Prod Mem | Dev Mem |
+|------------|----------|---------|----------|---------|
+| ztunnel    | 8 vCPU   | 7.5 vCPU | 2.3 GB   | 2.25 GB |
+| waypoint   | 9 vCPU   | 0.9 vCPU | 0.9 GB   | 0.36 GB |
+| istiod     | 1.1 vCPU | 4 vCPU  | 2.8 GB   | 5.1 GB  |
+| cni        | 0.4 vCPU | 0.4 vCPU |  1 GB   |  1 GB   |
+| **TOTAL**  | **18.5 vCPU** | **12.8 vCPU** | **7.0 GB** | **8.7 GB** |
+
+---

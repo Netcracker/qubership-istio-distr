@@ -1,0 +1,110 @@
+global:
+  profile: ambient
+  
+  # namespace where istio will be installed
+  istioNamespace: istio-system
+
+  # Default hub for Istio images.
+  # hub: docker.io/istio
+
+  # Default tag for Istio images.
+  # tag: <tag>
+
+  # Variant of the image to use.
+  # Currently supported are: [debug, distroless]
+  # variant: ""
+
+# ---------------------------------------------------------------------------
+# istio-base — CRDs and cluster-scoped resources
+# ---------------------------------------------------------------------------
+base: {}
+
+# ---------------------------------------------------------------------------
+# cni — CNI plugin DaemonSet
+# ---------------------------------------------------------------------------
+cni:
+  # Default hub for Istio images.
+  # hub: docker.io/istio
+
+  # Can be a full hub/image:tag
+  # image: install-cni
+
+  # Default tag for Istio images.
+  # tag: <tag>
+
+  # Variant of the image to use.
+  # Currently supported are: [debug, distroless]
+  # variant: ""
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 400m
+      memory: 512Mi
+
+# ---------------------------------------------------------------------------
+# istiod — control plane (Pilot / istiod)
+# ---------------------------------------------------------------------------
+istiod:
+  # Default hub for Istio images.
+  # hub: docker.io/istio
+
+  # Can be a full hub/image:tag
+  # image: pilot
+
+  # Default tag for Istio images.
+  # tag: <tag>
+
+  # Variant of the image to use.
+  # Currently supported are: [debug, distroless]
+  # variant: ""
+
+  meshConfig:
+    accessLogFile: "/dev/stdout"
+
+  gatewayClasses:
+    istio:
+      service:
+        spec:
+          type: ClusterIP
+
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      cpu: 400m
+      memory: 1Gi
+
+# ---------------------------------------------------------------------------
+# ztunnel — ztunnel DaemonSet (ambient mode L4 proxy)
+# ---------------------------------------------------------------------------
+ztunnel:
+  # Hub to pull from. Image will be `Hub/Image:Tag-Variant`
+  # hub: docker.io/istio
+
+  # Tag to pull from. Image will be `Hub/Image:Tag-Variant`
+  # tag: <tag>
+
+  # Variant to pull. Options are "debug" or "distroless". Unset will use the default for the given version.
+  # variant: ""
+
+  # Image name to pull from. Image will be `Hub/Image:Tag-Variant`
+  # If Image contains a "/", it will replace the entire `image` in the pod.
+  # image: ztunnel
+
+  meshConfig:
+    defaultConfig:
+      proxyMetadata:
+        ISTIO_META_DNS_CAPTURE: "true"
+        ISTIO_META_ROUTER_MODE: "sni-dnat"
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 400m
+      memory: 512Mi
