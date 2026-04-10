@@ -108,3 +108,8 @@ ztunnel:
     limits:
       cpu: 400m
       memory: 512Mi
+
+MONITORING_ENABLED: &monitoringEnabled false
+monitoring:
+  enabled: *monitoringEnabled
+  scrapeInterval: 30s
